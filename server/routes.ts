@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const membership = await storage.getUserClanMembership(userId);
       
       if (!membership) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "No clan membership found" });
       }
       
       res.json(membership);
@@ -302,14 +302,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/clans', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const clanData = insertClanSchema.parse({ ...req.body, leaderId: userId });
       
+      // Check if user is already in a clan
+      const existingMembership = await storage.getUserClanMembership(userId);
+      if (existingMembership) {
+        return res.status(400).json({ message: "You are already a member of a clan. Leave your current clan first." });
+      }
+      
+      const clanData = insertClanSchema.parse({ ...req.body, leaderId: userId });
       const clan = await clanService.createClan(clanData, userId);
       res.json(clan);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid clan data", errors: error.errors });
       }
+      console.error("Error creating clan:", error);
       res.status(500).json({ message: "Failed to create clan" });
     }
   });
@@ -376,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/tournaments', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const tournamentData = insertTournamentSchema.parse(req.body);
+      const tournamentData = insertTournamentSchema.parse({ ...req.body, createdBy: userId });
       
       const tournament = await tournamentService.createTournament(tournamentData, userId);
       res.json(tournament);
@@ -384,6 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid tournament data", errors: error.errors });
       }
+      console.error("Error creating tournament:", error);
       res.status(500).json({ message: "Failed to create tournament" });
     }
   });

@@ -206,6 +206,13 @@ export class MemoryStorage implements IStorage {
       joinedAt: new Date(),
     };
     this.clanMemberships.set(membership.id, membership);
+    
+    // Update clan member count
+    const clan = this.clans.get(clanId);
+    if (clan) {
+      clan.memberCount = (clan.memberCount || 0) + 1;
+    }
+    
     return membership;
   }
 

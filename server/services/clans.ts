@@ -22,6 +22,8 @@ export class ClanService {
   }
 
   async joinClan(clanId: number, userId: string): Promise<ClanMembership> {
+    console.log(`User ${userId} attempting to join clan ${clanId}`);
+    
     const clan = await storage.getClanById(clanId);
     if (!clan) {
       throw new Error("Clan not found");
@@ -57,6 +59,7 @@ export class ClanService {
       data: { clanId, newMemberId: userId },
     });
 
+    console.log(`User ${userId} successfully joined clan ${clanId}`);
     return membership;
   }
 

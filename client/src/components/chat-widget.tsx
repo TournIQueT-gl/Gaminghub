@@ -6,6 +6,7 @@ import { Send } from "lucide-react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
+import ErrorBoundary from "@/components/error-boundary";
 
 interface ChatMessage {
   id: string;
@@ -15,10 +16,10 @@ interface ChatMessage {
   createdAt: string;
 }
 
-export default function ChatWidget() {
+function ChatWidgetContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [onlineCount, setOnlineCount] = useState(127);
+  const [onlineCount, setOnlineCount] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected, sendMessage, joinRoom } = useWebSocket();
   const { user } = useAuth();
@@ -32,36 +33,38 @@ export default function ChatWidget() {
       // Join global chat room
       joinRoom('global');
 
-      // Listen for chat messages
-      const handleMessage = (event: MessageEvent) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          switch (data.type) {
-            case 'chat_message':
-              const chatMessage: ChatMessage = {
-                id: data.data.id || Date.now().toString(),
-                userId: data.data.userId,
-                username: data.data.username,
-                content: data.data.content,
-                createdAt: data.data.createdAt || new Date().toISOString(),
-              };
-              setMessages(prev => [...prev, chatMessage]);
-              break;
-            case 'user_joined':
-              setOnlineCount(prev => prev + 1);
-              break;
-            case 'user_left':
-              setOnlineCount(prev => Math.max(0, prev - 1));
-              break;
-          }
-        } catch (error) {
-          console.error('Error parsing chat message:', error);
+      // Listen for WebSocket events
+      const handleChatMessage = (event: CustomEvent) => {
+        const data = event.detail;
+        const chatMessage: ChatMessage = {
+          id: data.id || Date.now().toString(),
+          userId: data.userId,
+          username: data.username,
+          content: data.content,
+          createdAt: data.createdAt || new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, chatMessage]);
+      };
+
+      const handleRoomEvent = (event: CustomEvent) => {
+        const data = event.detail;
+        switch (data.type) {
+          case 'user_joined':
+            setOnlineCount(prev => prev + 1);
+            break;
+          case 'user_left':
+            setOnlineCount(prev => Math.max(1, prev - 1));
+            break;
         }
       };
 
-      socket.addEventListener('message', handleMessage);
-      return () => socket.removeEventListener('message', handleMessage);
+      window.addEventListener('websocket-chat-message', handleChatMessage as EventListener);
+      window.addEventListener('websocket-room-event', handleRoomEvent as EventListener);
+
+      return () => {
+        window.removeEventListener('websocket-chat-message', handleChatMessage as EventListener);
+        window.removeEventListener('websocket-room-event', handleRoomEvent as EventListener);
+      };
     }
   }, [socket, isConnected, joinRoom]);
 
@@ -161,5 +164,13 @@ export default function ChatWidget() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export default function ChatWidget() {
+  return (
+    <ErrorBoundary>
+      <ChatWidgetContent />
+    </ErrorBoundary>
   );
 }

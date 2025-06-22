@@ -15,11 +15,11 @@ import { Trophy, Plus } from "lucide-react";
 
 const createTournamentSchema = z.object({
   name: z.string().min(3, "Tournament name must be at least 3 characters").max(100, "Tournament name must be less than 100 characters"),
-  description: z.string().max(1000, "Description must be less than 1000 characters").optional(),
+  description: z.string().optional().or(z.literal("")),
   game: z.string().min(1, "Please select a game"),
   format: z.enum(["solo", "team"], { required_error: "Please select a format" }),
   maxParticipants: z.number().min(4, "Minimum 4 participants").max(256, "Maximum 256 participants"),
-  prizePool: z.string().optional(),
+  prizePool: z.string().optional().or(z.literal("")),
   startDate: z.string().min(1, "Start date is required"),
 });
 
@@ -57,12 +57,17 @@ export default function CreateTournamentForm() {
 
   const createTournamentMutation = useMutation({
     mutationFn: async (data: CreateTournamentFormData) => {
-      const response = await apiRequest('POST', '/api/tournaments', {
-        ...data,
+      const payload = {
+        name: data.name,
+        description: data.description || undefined,
+        game: data.game,
+        format: data.format,
         maxParticipants: Number(data.maxParticipants),
         startDate: new Date(data.startDate).toISOString(),
-        prizePool: data.prizePool || null,
-      });
+        prizePool: data.prizePool || undefined,
+        createdBy: undefined, // Will be set by backend
+      };
+      const response = await apiRequest('POST', '/api/tournaments', payload);
       return response.json();
     },
     onSuccess: () => {

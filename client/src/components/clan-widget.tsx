@@ -3,12 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import ErrorBoundary from "@/components/error-boundary";
 
-export default function ClanWidget() {
-  const { data: clans, isLoading } = useQuery({
+function ClanWidgetContent() {
+  const { data: clans, isLoading, error } = useQuery({
     queryKey: ['/api/clans'],
     retry: false,
   });
+
+  if (error) {
+    throw error;
+  }
 
   const trendingClans = clans?.slice(0, 3) || [];
 
@@ -62,9 +67,9 @@ export default function ClanWidget() {
               </div>
               <div className="text-right">
                 <div className="text-xs text-gaming-emerald font-mono">
-                  +{clan.xp.toLocaleString()} XP
+                  {(clan.xp || 0).toLocaleString()} XP
                 </div>
-                <div className="text-xs text-gaming-text-dim">this week</div>
+                <div className="text-xs text-gaming-text-dim">total</div>
               </div>
             </div>
           ))
@@ -81,5 +86,13 @@ export default function ClanWidget() {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+export default function ClanWidget() {
+  return (
+    <ErrorBoundary>
+      <ClanWidgetContent />
+    </ErrorBoundary>
   );
 }
