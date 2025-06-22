@@ -6,6 +6,7 @@ import PostCard from "@/components/post-card";
 import TournamentWidget from "@/components/tournament-widget";
 import ClanWidget from "@/components/clan-widget";
 import ChatWidget from "@/components/chat-widget";
+import { LoadingPage } from "@/components/loading-spinner";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,18 +51,7 @@ export default function Home() {
   }, [error, toast]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gaming-dark flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-gaming-blue to-gaming-purple rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM4 7h16v11H4zm1-3h2l1 2H4zm12 0h2l1 2h-3z"/>
-            </svg>
-          </div>
-          <p className="text-gaming-text-dim">Loading GamingX...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPage text="Loading GamingX..." />;
   }
 
   return (

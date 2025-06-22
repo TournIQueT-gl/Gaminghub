@@ -86,17 +86,29 @@ export function useWebSocket(): UseWebSocketReturn {
 
   const handleMessage = (message: WebSocketMessage) => {
     switch (message.type) {
+      case 'connection_established':
+        console.log('WebSocket connected');
+        setIsConnected(true);
+        break;
       case 'auth_success':
         console.log('WebSocket authentication successful');
         break;
       case 'error':
-        console.error('WebSocket error:', message.data.error);
+        console.error('WebSocket error:', message.data?.error || 'Unknown error');
         break;
       case 'chat_message':
-        // Handle chat messages (will be handled by chat components)
+        // Dispatch custom event for chat components
+        window.dispatchEvent(new CustomEvent('websocket-chat-message', { detail: message.data }));
         break;
       case 'notification':
-        // Handle notifications
+        // Dispatch custom event for notification handling
+        window.dispatchEvent(new CustomEvent('websocket-notification', { detail: message.data }));
+        break;
+      case 'user_joined':
+      case 'user_left':
+      case 'joined_room':
+        // Handle room events
+        window.dispatchEvent(new CustomEvent('websocket-room-event', { detail: message }));
         break;
       default:
         console.log('Unknown message type:', message.type);

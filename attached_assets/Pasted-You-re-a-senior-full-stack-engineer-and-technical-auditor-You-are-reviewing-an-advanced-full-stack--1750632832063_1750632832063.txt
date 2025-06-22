@@ -1,0 +1,69 @@
+You're a senior full-stack engineer and technical auditor. You are reviewing an advanced full-stack app called **GamingX** — a social platform for gamers.
+
+The codebase is a monorepo:
+- `/apps/backend`: NestJS + Prisma + PostgreSQL
+- `/apps/frontend`: Next.js + TailwindCSS
+- Realtime: Socket.IO
+- Auth: JWT + OAuth
+- AI: OpenAI integration for post tags, bio, moderation
+
+Your job is to **audit the entire application for quality, completeness, and functionality**.
+
+Do the following:
+
+---
+
+### 🔍 1. BACKEND AUDIT (NestJS)
+- Check for missing route guards or improperly exposed endpoints
+- Validate that all modules (Auth, Posts, Users, Clans, Tournaments, Chat) are:
+  - Complete
+  - Properly using DTOs
+  - Returning correct status codes
+  - Logging correctly
+  - Handling errors with `HttpException` and `try/catch`
+- Review all Prisma models:
+  - Validate all relations, constraints, enums, indexes
+  - Check for orphaned or unused models
+- Review real-time Socket.IO gateways:
+  - Are events named and scoped correctly?
+  - Do they enforce auth and room scoping?
+
+---
+
+### 🎨 2. FRONTEND AUDIT (Next.js)
+- Check for missing pages, broken routing, or unconnected components
+- Validate form validation (login, register, post, clan creation, etc.)
+- Audit Tailwind classes for responsive/mobile issues
+- Check state management:
+  - Auth context
+  - Socket.io listeners
+  - Loading/error states
+- Ensure proper API integration:
+  - Fetch/post endpoints use try/catch
+  - Tokens are handled (refresh if needed)
+
+---
+
+### 🛠 3. SYSTEM & DEPLOY
+- Confirm `.env.example` includes all needed variables
+- Ensure scripts are correct in `package.json`:
+  - dev:frontend
+  - dev:backend
+  - prisma:generate
+  - prisma:seed
+  - build/start scripts
+- Review CI/CD if present (Replit Task or GitHub Actions)
+- Confirm that Replit config is deployable
+
+---
+
+### 📦 4. OPTIONAL FIXES
+For every issue you find:
+- Either fix it directly or leave a clear `// TODO:` with notes
+- Remove dead/unreachable code
+- Improve modularity if any services/controllers exceed 300+ lines
+- Optimize queries where possible (e.g., Prisma includes, pagination)
+
+---
+
+Only return updated/fixed files. Do not rewrite working code. Do not regenerate modules unnecessarily. No explanations — output changes only.

@@ -35,7 +35,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(user);
     } catch (error) {
+      console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.get('/api/users/:id/posts', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const posts = await storage.getPostsByUserId(userId);
+      
+      // Get user info
+      const user = await storage.getUser(userId);
+      const postsWithUser = posts.map(post => ({ ...post, user }));
+      
+      res.json(postsWithUser);
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
+      res.status(500).json({ message: "Failed to fetch user posts" });
+    }
+  });
+
+  app.get('/api/users/:id/stats', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const posts = await storage.getPostsByUserId(userId);
+      const followers = await storage.getUserFollowers(userId);
+      const following = await storage.getUserFollowing(userId);
+      const clanMembership = await storage.getUserClanMembership(userId);
+      
+      res.json({
+        level: user.level || 1,
+        xp: user.xp || 0,
+        postsCount: posts.length,
+        followersCount: followers.length,
+        followingCount: following.length,
+        clanMembership: clanMembership ? {
+          id: clanMembership.clan.id,
+          name: clanMembership.clan.name,
+          role: clanMembership.role
+        } : null
+      });
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch user stats" });
+    }
+  });
+
+  app.get('/api/users/clan-membership', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const membership = await storage.getUserClanMembership(userId);
+      
+      if (!membership) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(membership);
+    } catch (error) {
+      console.error("Error fetching clan membership:", error);
+      res.status(500).json({ message: "Failed to fetch clan membership" });
     }
   });
 
@@ -168,6 +233,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/posts/:id/comments', async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
+      
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
       const comments = await storage.getCommentsByPostId(postId);
       
       // Get comment authors
@@ -182,6 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(commentsWithUsers);
     } catch (error) {
+      console.error("Error fetching comments:", error);
       res.status(500).json({ message: "Failed to fetch comments" });
     }
   });
@@ -255,12 +326,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/clans/:id', async (req, res) => {
+    try {
+      const clanId = parseInt(req.params.id);
+      
+      if (isNaN(clanId)) {
+        return res.status(400).json({ message: "Invalid clan ID" });
+      }
+      
+      const clan = await storage.getClanById(clanId);
+      
+      if (!clan) {
+        return res.status(404).json({ message: "Clan not found" });
+      }
+      
+      res.json(clan);
+    } catch (error) {
+      console.error("Error fetching clan:", error);
+      res.status(500).json({ message: "Failed to fetch clan" });
+    }
+  });
+
   app.get('/api/clans/:id/members', async (req, res) => {
     try {
       const clanId = parseInt(req.params.id);
+      
+      if (isNaN(clanId)) {
+        return res.status(400).json({ message: "Invalid clan ID" });
+      }
+      
       const members = await storage.getClanMembers(clanId);
       res.json(members);
     } catch (error) {
+      console.error("Error fetching clan members:", error);
       res.status(500).json({ message: "Failed to fetch clan members" });
     }
   });
@@ -427,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes (basic structure)
+  // Admin routes
   app.get('/api/admin/stats', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
@@ -435,14 +533,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
       
-      // Return basic platform stats
+      // Get actual platform stats
+      const posts = await storage.getPosts(1000, 0); // Get more posts for count
+      const clans = await storage.getClans();
+      const tournaments = await storage.getTournaments();
+      
+      // Count users by getting all user IDs from posts
+      const userIds = new Set();
+      posts.forEach(post => userIds.add(post.userId));
+      
       res.json({
-        users: 0, // Would implement actual counts
-        posts: 0,
-        tournaments: 0,
-        clans: 0,
+        users: userIds.size,
+        posts: posts.length,
+        tournaments: tournaments.length,
+        clans: clans.length,
       });
     } catch (error) {
+      console.error("Error fetching admin stats:", error);
       res.status(500).json({ message: "Failed to fetch admin stats" });
     }
   });

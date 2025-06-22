@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
+import { LoadingPage } from "@/components/loading-spinner";
+import CreateClanForm from "@/components/forms/create-clan-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,16 +104,7 @@ export default function Clans() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gaming-dark flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-gaming-purple to-gaming-blue rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-gaming-text-dim">Loading clans...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPage text="Loading clans..." />;
   }
 
   return (
@@ -176,9 +169,7 @@ export default function Clans() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">Clan Leaderboard</h2>
-                <Button className="bg-gaming-purple hover:bg-purple-600">
-                  Create Clan
-                </Button>
+                <CreateClanForm />
               </div>
               
               {clansLoading ? (
@@ -267,9 +258,7 @@ export default function Clans() {
                       <p className="text-gaming-text-dim mb-4">
                         Be the first to create a clan and start building your gaming community!
                       </p>
-                      <Button className="bg-gaming-purple hover:bg-purple-600">
-                        Create First Clan
-                      </Button>
+                      <CreateClanForm />
                     </div>
                   </CardContent>
                 </Card>
