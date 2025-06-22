@@ -60,16 +60,16 @@ export default function TournamentsPage() {
 
   return (
     <AuthenticatedLayout>
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
+      <div className="max-w-6xl mx-auto px-0 sm:px-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Tournaments</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Tournaments</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Compete in organized tournaments and climb the leaderboards
             </p>
           </div>
           
-          <Button onClick={() => setShowCreate(true)} variant="gaming">
+          <Button onClick={() => setShowCreate(true)} variant="gaming" className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Create Tournament
           </Button>

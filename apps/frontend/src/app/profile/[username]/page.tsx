@@ -76,7 +76,7 @@ export default function ProfilePage() {
 
   return (
     <AuthenticatedLayout>
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-0 sm:px-4">
         <UserProfile user={user} stats={stats} />
         
         <Tabs defaultValue="posts" className="mt-8">

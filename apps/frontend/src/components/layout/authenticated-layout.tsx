@@ -38,8 +38,8 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
       <Navbar />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 md:ml-64">
-          <div className="py-6">
+        <main className="flex-1 lg:ml-64">
+          <div className="py-4 px-4 lg:py-6 lg:px-0">
             {children}
           </div>
         </main>

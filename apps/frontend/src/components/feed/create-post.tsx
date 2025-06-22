@@ -137,8 +137,8 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -147,7 +147,7 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
                 className={showImageInput ? 'text-gaming-primary' : ''}
               >
                 <Image className="h-4 w-4 mr-1" />
-                Image
+                <span className="hidden sm:inline">Image</span>
               </Button>
               
               <Button
@@ -158,7 +158,7 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
                 className={showHashtagInput ? 'text-gaming-primary' : ''}
               >
                 <Hash className="h-4 w-4 mr-1" />
-                Tags
+                <span className="hidden sm:inline">Tags</span>
               </Button>
             </div>
 

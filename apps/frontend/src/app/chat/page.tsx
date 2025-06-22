@@ -47,7 +47,7 @@ export default function ChatPage() {
     <AuthenticatedLayout>
       <div className="flex h-[calc(100vh-4rem)] max-w-6xl mx-auto">
         {/* Room List */}
-        <div className="w-80 border-r bg-card">
+        <div className="w-full sm:w-80 border-r bg-card sm:block hidden">
           <ChatRoomList
             rooms={rooms}
             selectedRoom={selectedRoom}
@@ -57,7 +57,7 @@ export default function ChatPage() {
         </div>
 
         {/* Chat Window */}
-        <div className="flex-1">
+        <div className="flex-1 sm:block hidden">
           {selectedRoom ? (
             <ChatWindow room={selectedRoom} />
           ) : (
@@ -69,6 +69,20 @@ export default function ChatPage() {
                 </p>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Mobile Chat View */}
+        <div className="flex-1 sm:hidden">
+          {selectedRoom ? (
+            <ChatWindow room={selectedRoom} />
+          ) : (
+            <ChatRoomList
+              rooms={rooms}
+              selectedRoom={selectedRoom}
+              onRoomSelect={setSelectedRoom}
+              onRoomCreated={(room) => setRooms(prev => [room, ...prev])}
+            />
           )}
         </div>
       </div>

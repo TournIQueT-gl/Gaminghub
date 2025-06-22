@@ -75,27 +75,27 @@ export function ReactionBar({
   }
 
   return (
-    <div className="flex items-center space-x-6">
+    <div className="flex items-center space-x-3 sm:space-x-6">
       <Button
         variant="ghost"
         size="sm"
         onClick={handleLike}
         disabled={isLiking}
         className={cn(
-          "text-muted-foreground hover:text-foreground transition-colors",
+          "text-muted-foreground hover:text-foreground transition-colors p-2 sm:px-4",
           isLiked && "text-red-500 hover:text-red-600"
         )}
       >
         <Heart
           className={cn(
-            "h-4 w-4 mr-2",
+            "h-4 w-4 mr-1 sm:mr-2",
             isLiked && "fill-current"
           )}
         />
-        {likeCount}
+        <span className="text-xs sm:text-sm">{likeCount}</span>
       </Button>
 
-      <div className="flex items-center text-muted-foreground text-sm">
+      <div className="flex items-center text-muted-foreground text-xs sm:text-sm">
         <MessageCircle className="h-4 w-4 mr-1" />
         {commentCount}
       </div>
@@ -104,10 +104,10 @@ export function ReactionBar({
         variant="ghost"
         size="sm"
         onClick={handleShare}
-        className="text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground p-2 sm:px-4"
       >
-        <Share2 className="h-4 w-4 mr-2" />
-        {shareCount}
+        <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
+        <span className="text-xs sm:text-sm">{shareCount}</span>
       </Button>
     </div>
   )

@@ -32,7 +32,7 @@ export function Navbar() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex flex-1 items-center justify-center space-x-6">
+        <div className="hidden lg:flex flex-1 items-center justify-center space-x-6">
           <Link href="/feed" className="text-sm font-medium transition-colors hover:text-gaming-primary">
             Feed
           </Link>
@@ -69,7 +69,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <Menu className="h-5 w-5" />
@@ -79,22 +79,47 @@ export function Navbar() {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t bg-background">
-          <div className="container py-4 space-y-3">
-            <Link href="/feed" className="block text-sm font-medium">
+        <div className="lg:hidden border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="container py-4 space-y-1">
+            <Link 
+              href="/feed" 
+              className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <MessageCircle className="h-4 w-4 mr-3" />
               Feed
             </Link>
-            <Link href="/tournaments" className="block text-sm font-medium">
+            <Link 
+              href="/tournaments" 
+              className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Trophy className="h-4 w-4 mr-3" />
               Tournaments
             </Link>
-            <Link href="/clans" className="block text-sm font-medium">
+            <Link 
+              href="/clans" 
+              className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Users className="h-4 w-4 mr-3" />
               Clans
             </Link>
-            <Link href="/chat" className="block text-sm font-medium">
+            <Link 
+              href="/chat" 
+              className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <MessageCircle className="h-4 w-4 mr-3" />
               Chat
             </Link>
             {user && (
-              <Link href={`/profile/${user.username || user.id}`} className="block text-sm font-medium">
+              <Link 
+                href={`/profile/${user.username || user.id}`} 
+                className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Users className="h-4 w-4 mr-3" />
                 Profile
               </Link>
             )}

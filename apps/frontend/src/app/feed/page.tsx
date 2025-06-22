@@ -73,7 +73,7 @@ export default function FeedPage() {
 
   return (
     <AuthenticatedLayout>
-      <div className="max-w-2xl mx-auto px-4">
+      <div className="max-w-2xl mx-auto px-0 sm:px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Gaming Feed</h1>
           <p className="text-muted-foreground">

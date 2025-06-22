@@ -17,7 +17,7 @@ export function TournamentFilters({ currentFilter, onFilterChange }: TournamentF
   ]
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
       {filters.map((filter) => (
         <Button
           key={filter.key}
@@ -25,6 +25,7 @@ export function TournamentFilters({ currentFilter, onFilterChange }: TournamentF
           size="sm"
           onClick={() => onFilterChange(filter.key)}
           className={cn(
+            'whitespace-nowrap',
             currentFilter === filter.key && 'bg-gaming-primary hover:bg-gaming-primary/90'
           )}
         >

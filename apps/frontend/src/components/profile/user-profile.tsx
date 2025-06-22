@@ -26,11 +26,11 @@ export function UserProfile({ user, stats }: UserProfileProps) {
             <UserAvatar user={user} size="lg" className="mb-4" />
             
             <div className="text-center lg:text-left">
-              <h1 className="text-2xl font-bold mb-1">
+              <h1 className="text-xl sm:text-2xl font-bold mb-1 break-words">
                 {user.username || `${user.firstName} ${user.lastName}`.trim() || 'Anonymous'}
               </h1>
               
-              <div className="text-muted-foreground mb-2">
+              <div className="text-muted-foreground mb-2 text-sm sm:text-base">
                 Level {level} • {formatXP(user.xp)}
               </div>
               
@@ -44,7 +44,7 @@ export function UserProfile({ user, stats }: UserProfileProps) {
 
           {/* Stats Grid */}
           <div className="flex-1">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-gaming-primary">
                   {user.totalPosts || 0}
@@ -80,19 +80,19 @@ export function UserProfile({ user, stats }: UserProfileProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {isOwnProfile ? (
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Profile
                 </Button>
               ) : (
                 <>
-                  <Button variant="gaming">
+                  <Button variant="gaming" className="w-full sm:w-auto">
                     <Users className="h-4 w-4 mr-2" />
                     Follow
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     Message
                   </Button>
                 </>

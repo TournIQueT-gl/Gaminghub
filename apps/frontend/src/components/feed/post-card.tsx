@@ -99,24 +99,25 @@ export function PostCard({ post, onUpdate }: PostCardProps) {
         />
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowComments(!showComments)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
           >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            {post.commentCount || 0} comments
+            <MessageCircle className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{post.commentCount || 0} comments</span>
+            <span className="sm:hidden">{post.commentCount || 0}</span>
           </Button>
           
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
           >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
+            <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Share</span>
           </Button>
         </div>
 
