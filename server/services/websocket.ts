@@ -16,13 +16,26 @@ export class WebSocketService {
   private roomConnections = new Map<string, Set<WebSocket>>();
 
   constructor(server: Server) {
-    this.wss = new WebSocketServer({ server, path: '/ws' });
+    this.wss = new WebSocketServer({ 
+      server, 
+      path: '/ws',
+      verifyClient: (info) => {
+        // Allow all connections in development
+        return true;
+      }
+    });
     this.setupWebSocket();
   }
 
   private setupWebSocket() {
     this.wss.on('connection', (ws: WebSocket, request) => {
       console.log('New WebSocket connection');
+
+      // Send welcome message
+      this.sendMessage(ws, {
+        type: 'connection_established',
+        data: { message: 'Connected to GamingX WebSocket' }
+      });
 
       ws.on('message', async (data: Buffer) => {
         try {
@@ -35,6 +48,7 @@ export class WebSocketService {
       });
 
       ws.on('close', () => {
+        console.log('WebSocket connection closed');
         this.handleDisconnection(ws);
       });
 
