@@ -93,6 +93,7 @@ async function main() {
     const clan = await prisma.clan.create({
       data: {
         name: faker.company.name() + ' Gaming',
+        tag: faker.string.alpha({ length: 4 }).toUpperCase(),
         description: faker.lorem.paragraph(),
         imageUrl: faker.image.url(),
         isPublic: faker.datatype.boolean(),

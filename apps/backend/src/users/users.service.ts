@@ -148,12 +148,24 @@ export class UsersService {
         xp: newXP,
         level: newLevel,
       },
-      select: {
-        id: true,
-        xp: true,
-        level: true,
-      },
     });
+
+    // If user leveled up, create notification
+    if (newLevel > user.level) {
+      await this.prisma.notification.create({
+        data: {
+          userId,
+          title: 'Level Up!',
+          message: `Congratulations! You've reached level ${newLevel}`,
+          type: 'SYSTEM',
+        },
+      });
+      this.logger.log(`User ${userId} leveled up to ${newLevel}!`);
+    }
+
+    this.logger.log(`User ${userId} gained ${xp} XP${reason ? ` for: ${reason}` : ''}`);
+    return updatedUser;
+  }
 
     // Log XP gain
     this.logger.log(`User ${userId} gained ${xp} XP. Reason: ${reason || 'Unknown'}`);

@@ -72,8 +72,8 @@ model Post {
   // Relations
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments    Comment[]
-  likes       Like[]
-  reports     Report[]
+  likes       Like[]     @relation("PostLikes")
+  reports     Report[]   @relation("PostReports")
 
   @@map("posts")
 }
@@ -90,8 +90,8 @@ model Comment {
   // Relations
   post      Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  likes     Like[]
-  reports   Report[]
+  likes     Like[] @relation("CommentLikes")
+  reports   Report[] @relation("CommentReports")
 
   @@map("comments")
 }
@@ -105,8 +105,8 @@ model Like {
 
   // Relations
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post       Post?     @relation(fields: [targetId], references: [id], onDelete: Cascade)
-  comment    Comment?  @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  post       Post?     @relation("PostLikes", fields: [targetId], references: [id], onDelete: Cascade, map: "likes_post_fkey")
+  comment    Comment?  @relation("CommentLikes", fields: [targetId], references: [id], onDelete: Cascade, map: "likes_comment_fkey")
 
   @@unique([userId, targetId, targetType])
   @@map("likes")
@@ -402,8 +402,8 @@ model Report {
   // Relations
   reporter   User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
   reported   User     @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
-  post       Post?    @relation(fields: [targetId], references: [id], onDelete: Cascade)
-  comment    Comment? @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  post       Post?    @relation("PostReports", fields: [targetId], references: [id], onDelete: Cascade, map: "reports_post_fkey")
+  comment    Comment? @relation("CommentReports", fields: [targetId], references: [id], onDelete: Cascade, map: "reports_comment_fkey")
 
   @@map("reports")
 }

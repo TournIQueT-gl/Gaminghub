@@ -51,11 +51,12 @@ export class TournamentsService {
     // Award XP for creating a tournament
     await this.usersService.addXP(userId, 200, 'Created a tournament');
 
-    return {
+    const result = {
       ...tournament,
       participantCount: tournament._count.participants,
-      _count: undefined,
     };
+    delete result._count;
+    return result;
   }
 
   async getTournaments(page = 1, limit = 20, status?: TournamentStatus) {

@@ -15,6 +15,7 @@ export class HealthService {
 
       return {
         status: 'healthy',
+        message: 'All systems operational',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         services: {
@@ -28,7 +29,7 @@ export class HealthService {
           },
         },
         environment: process.env.NODE_ENV || 'development',
-        version: process.env.npm_package_version || '1.0.0',
+        version: '1.0.0',
       };
     } catch (error) {
       return {

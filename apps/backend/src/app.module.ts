@@ -15,6 +15,8 @@ import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
 import { SearchModule } from './search/search.module';
+import { UploadModule } from './upload/upload.module';
+import { AchievementsModule } from './achievements/achievements.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { SearchModule } from './search/search.module';
     NotificationsModule,
     HealthModule,
     SearchModule,
+    UploadModule,
+    AchievementsModule,
   ],
 })
 export class AppModule {}

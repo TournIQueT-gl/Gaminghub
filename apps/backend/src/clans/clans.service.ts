@@ -463,6 +463,11 @@ export class ClansService {
     const clan = await this.prisma.clan.findUnique({
       where: { id: clanId },
       select: { xp: true, level: true },
+      include: {
+        memberships: {
+          select: { userId: true },
+        },
+      },
     });
 
     if (!clan) {
@@ -486,13 +491,24 @@ export class ClansService {
       },
     });
 
-    this.logger.log(`Clan ${clanId} gained ${xp} XP. Reason: ${reason || 'Unknown'}`);
+    // If clan leveled up, notify all members
+    if (newLevel > clan.level && clan.memberships) {
+      const notifications = clan.memberships.map(member => ({
+        userId: member.userId,
+        title: 'Clan Level Up!',
+        message: `Your clan has reached level ${newLevel}!`,
+        type: 'CLAN' as const,
+        data: { clanId },
+      }));
 
-    if (newLevel > clan.level) {
-      this.logger.log(`Clan ${clanId} leveled up to level ${newLevel}!`);
-      // TODO: Create clan level up notification for all members
+      await this.prisma.notification.createMany({
+        data: notifications,
+      });
+
+      this.logger.log(`Clan ${clanId} leveled up to ${newLevel}!`);
     }
 
+    this.logger.log(`Clan ${clanId} gained ${xp} XP. Reason: ${reason || 'Unknown'}`);
     return updatedClan;
   }
 

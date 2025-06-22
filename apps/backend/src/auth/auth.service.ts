@@ -44,7 +44,7 @@ export class AuthService {
       where: { email },
     });
 
-    if (user && await bcrypt.compare(password, user.password || '')) {
+    if (user && user.password && await bcrypt.compare(password, user.password)) {
       const { password: _, ...result } = user;
       return result;
     }
@@ -84,6 +84,7 @@ export class AuthService {
         firstName: registerDto.firstName,
         lastName: registerDto.lastName,
         password: hashedPassword,
+        favoriteGames: [],
       },
     });
 
