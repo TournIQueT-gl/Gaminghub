@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, MaxLength, MinLength, IsUrl } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, IsUrl, IsArray, IsEnum } from 'class-validator';
+import { UserStatus } from '@prisma/client';
 
 export class UpdateUserDto {
   @ApiProperty({ required: false })
@@ -31,6 +32,22 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(500)
   bio?: string;
+
+  @ApiProperty({ required: false, type: [String], description: 'Favorite games' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  favoriteGames?: string[];
+
+  @ApiProperty({ required: false, enum: UserStatus, description: 'User status' })
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
+
+  @ApiProperty({ required: false, description: 'Current game being played' })
+  @IsOptional()
+  @IsString()
+  currentGame?: string;
 }
 
 export class UpdateUserBioDto {

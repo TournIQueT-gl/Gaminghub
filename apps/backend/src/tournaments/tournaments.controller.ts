@@ -16,7 +16,7 @@ import { TournamentsService } from './tournaments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { CreateTournamentDto, UpdateTournamentDto, JoinTournamentDto, SubmitMatchResultDto } from './dto/tournament.dto';
+import { CreateTournamentDto, UpdateTournamentDto, JoinTournamentDto, SubmitMatchResultDto, CreateTeamDto } from './dto/tournament.dto';
 import { TournamentStatus } from '@prisma/client';
 
 @ApiTags('tournaments')
@@ -133,5 +133,17 @@ export class TournamentsController {
     @Body() submitResultDto: SubmitMatchResultDto,
   ) {
     return this.tournamentsService.submitMatchResult(userId, matchId, submitResultDto);
+  }
+
+  @Post('teams')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create team for tournament' })
+  @ApiResponse({ status: 201, description: 'Team created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid tournament or members already in team' })
+  async createTeam(
+    @GetUser('id') userId: string,
+    @Body() createTeamDto: CreateTeamDto,
+  ) {
+    return this.tournamentsService.createTeam(userId, createTeamDto);
   }
 }

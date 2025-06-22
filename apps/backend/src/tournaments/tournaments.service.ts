@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException,
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { ClansService } from '../clans/clans.service';
-import { CreateTournamentDto, UpdateTournamentDto, JoinTournamentDto, SubmitMatchResultDto } from './dto/tournament.dto';
-import { TournamentStatus, TournamentParticipantStatus, MatchStatus } from '@prisma/client';
+import { CreateTournamentDto, UpdateTournamentDto, JoinTournamentDto, SubmitMatchResultDto, CreateTeamDto } from './dto/tournament.dto';
+import { TournamentStatus, TournamentParticipantStatus, MatchStatus, TournamentType } from '@prisma/client';
 
 @Injectable()
 export class TournamentsService {
@@ -25,6 +25,7 @@ export class TournamentsService {
         entryFee: createTournamentDto.entryFee,
         prizePool: createTournamentDto.prizePool,
         format: createTournamentDto.format,
+        type: createTournamentDto.type || TournamentType.SOLO,
         startDate: createTournamentDto.startDate,
         endDate: createTournamentDto.endDate,
         creatorId: userId,
@@ -240,21 +241,36 @@ export class TournamentsService {
       throw new BadRequestException('Already participating in this tournament');
     }
 
-    let clanId: number | null = null;
-    if (joinTournamentDto.clanId) {
-      // Verify user is member of the clan
-      const clanMembership = await this.clansService.getUserClanMembership(userId);
-      if (!clanMembership || clanMembership.clanId !== joinTournamentDto.clanId) {
-        throw new BadRequestException('You are not a member of this clan');
+    let teamId: number | null = null;
+    if (joinTournamentDto.teamId) {
+      if (tournament.type !== TournamentType.TEAM) {
+        throw new BadRequestException('Cannot join with team in solo tournament');
       }
-      clanId = joinTournamentDto.clanId;
+      
+      // Verify user is member of the team
+      const teamMember = await this.prisma.teamMember.findFirst({
+        where: {
+          teamId: joinTournamentDto.teamId,
+          userId,
+        },
+        include: {
+          team: true,
+        },
+      });
+
+      if (!teamMember || teamMember.team.tournamentId !== tournamentId) {
+        throw new BadRequestException('You are not a member of this team or team not in tournament');
+      }
+      teamId = joinTournamentDto.teamId;
+    } else if (tournament.type === TournamentType.TEAM) {
+      throw new BadRequestException('Team tournaments require a team ID');
     }
 
     const participant = await this.prisma.tournamentParticipant.create({
       data: {
         tournamentId,
         userId,
-        clanId,
+        teamId,
         status: TournamentParticipantStatus.REGISTERED,
       },
       include: {
@@ -268,11 +284,12 @@ export class TournamentsService {
             level: true,
           },
         },
-        clan: clanId ? {
+        team: teamId ? {
           select: {
             id: true,
             name: true,
-            imageUrl: true,
+            tag: true,
+            avatarUrl: true,
           },
         } : false,
         tournament: {
@@ -288,12 +305,111 @@ export class TournamentsService {
     // Award XP for joining tournament
     await this.usersService.addXP(userId, 50, 'Joined a tournament');
 
-    // Award clan XP if representing a clan
-    if (clanId) {
-      await this.clansService.addClanXP(clanId, 100, 'Member joined tournament');
+    return participant;
+  }
+
+  async createTeam(userId: string, createTeamDto: CreateTeamDto) {
+    const tournament = await this.prisma.tournament.findUnique({
+      where: { id: createTeamDto.tournamentId },
+    });
+
+    if (!tournament) {
+      throw new NotFoundException('Tournament not found');
     }
 
-    return participant;
+    if (tournament.type !== TournamentType.TEAM) {
+      throw new BadRequestException('Cannot create team for solo tournament');
+    }
+
+    if (tournament.status !== TournamentStatus.UPCOMING) {
+      throw new BadRequestException('Cannot create team after tournament has started');
+    }
+
+    // Verify all members exist and are not already in a team for this tournament
+    const members = await this.prisma.user.findMany({
+      where: {
+        id: { in: [userId, ...createTeamDto.memberIds] },
+      },
+    });
+
+    if (members.length !== createTeamDto.memberIds.length + 1) {
+      throw new BadRequestException('One or more users not found');
+    }
+
+    // Check if any member is already in a team for this tournament
+    const existingTeamMembers = await this.prisma.teamMember.findMany({
+      where: {
+        userId: { in: [userId, ...createTeamDto.memberIds] },
+        team: {
+          tournamentId: createTeamDto.tournamentId,
+        },
+      },
+    });
+
+    if (existingTeamMembers.length > 0) {
+      throw new BadRequestException('One or more users are already in a team for this tournament');
+    }
+
+    const team = await this.prisma.$transaction(async (tx) => {
+      const newTeam = await tx.team.create({
+        data: {
+          name: createTeamDto.name,
+          tag: createTeamDto.tag,
+          tournamentId: createTeamDto.tournamentId,
+          captainId: userId,
+        },
+      });
+
+      // Add captain as team member
+      await tx.teamMember.create({
+        data: {
+          teamId: newTeam.id,
+          userId,
+          role: 'CAPTAIN',
+        },
+      });
+
+      // Add other members
+      if (createTeamDto.memberIds.length > 0) {
+        await tx.teamMember.createMany({
+          data: createTeamDto.memberIds.map(memberId => ({
+            teamId: newTeam.id,
+            userId: memberId,
+            role: 'MEMBER' as const,
+          })),
+        });
+      }
+
+      return tx.team.findUnique({
+        where: { id: newTeam.id },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImageUrl: true,
+                },
+              },
+            },
+          },
+          captain: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profileImageUrl: true,
+            },
+          },
+        },
+      });
+    });
+
+    return team;
   }
 
   async startTournament(userId: string, tournamentId: number) {

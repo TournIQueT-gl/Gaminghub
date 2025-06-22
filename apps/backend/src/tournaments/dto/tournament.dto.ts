@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsDateString, IsEnum, Min, Max, IsInt, IsObject } from 'class-validator';
-import { TournamentFormat } from '@prisma/client';
+import { IsString, IsOptional, IsNumber, IsDateString, IsEnum, Min, Max, IsInt, IsObject, IsArray } from 'class-validator';
+import { TournamentFormat, TournamentType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 
 export class CreateTournamentDto {
@@ -39,6 +39,11 @@ export class CreateTournamentDto {
   @IsOptional()
   @IsEnum(TournamentFormat)
   format?: TournamentFormat;
+
+  @ApiProperty({ enum: TournamentType, default: TournamentType.SOLO })
+  @IsOptional()
+  @IsEnum(TournamentType)
+  type?: TournamentType;
 
   @ApiProperty({ description: 'Tournament start date and time' })
   @IsDateString()
@@ -102,10 +107,30 @@ export class UpdateTournamentDto {
 }
 
 export class JoinTournamentDto {
-  @ApiProperty({ required: false, description: 'Clan ID if representing a clan' })
+  @ApiProperty({ required: false, description: 'Team ID for team tournaments' })
   @IsOptional()
   @IsInt()
-  clanId?: number;
+  teamId?: number;
+}
+
+export class CreateTeamDto {
+  @ApiProperty({ description: 'Team name' })
+  @IsString()
+  name: string;
+
+  @ApiProperty({ required: false, description: 'Team tag' })
+  @IsOptional()
+  @IsString()
+  tag?: string;
+
+  @ApiProperty({ description: 'Tournament ID' })
+  @IsInt()
+  tournamentId: number;
+
+  @ApiProperty({ description: 'Member user IDs', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  memberIds: string[];
 }
 
 export class SubmitMatchResultDto {

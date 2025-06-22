@@ -70,6 +70,15 @@ export class UsersController {
     return this.usersService.searchUsers(query, page, limit);
   }
 
+  @Get('profile/:username')
+  @Public()
+  @ApiOperation({ summary: 'Get public user profile by username' })
+  @ApiResponse({ status: 200, description: 'User profile retrieved' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getPublicProfileByUsername(@Param('username') username: string) {
+    return this.usersService.findByUsername(username);
+  }
+
   @Get(':username')
   @Public()
   @ApiOperation({ summary: 'Get user profile by username' })

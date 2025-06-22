@@ -1,0 +1,70 @@
+You are a senior backend/fullstack engineer working on the GamingX platform — a full-stack social app for gamers.
+
+The base app is built in a monorepo with:
+- Backend: NestJS + PostgreSQL via Prisma
+- Frontend: Next.js + TailwindCSS
+- Realtime: Socket.IO
+- Auth: JWT + OAuth
+- Some modules exist but are not fully implemented.
+
+Your task is to **finalize and make functional the following critical modules**, ensuring all features are real-time where needed, clean, and working end-to-end.
+
+---
+
+1. ✅ **Tournament System**
+- Create tournament (solo/team)
+- Join/Leave
+- Bracket generator
+- Match result submission
+- Real-time bracket updates via Socket.IO
+- Prisma models: Tournament, Match, Participant, Team
+- Auto advance winners
+- Backend routes + DTOs + permissions
+
+2. 🏰 **Clan System**
+- Create/join/leave/disband clan
+- Roles: Leader, Co-Leader, Member
+- Clan page with members, stats, posts
+- Clan chat room (group chat via Socket.IO)
+- Clan XP, level-up system
+- Prisma: Clan, ClanMember, ClanRole
+
+3. 👤 **User Profile**
+- View/update bio, favorite games, status (online/playing)
+- XP/level system based on engagement (posts, reactions, tournaments)
+- Public profile route + protected update endpoint
+- Avatar upload (Cloudinary)
+- API: getProfile, updateProfile, getPublicProfileByUsername
+
+4. 💬 **Chat System**
+- Direct messaging (1:1)
+- Group chat (DM group + clan chat)
+- Real-time typing indicators, unread badge
+- Prisma: ChatRoom, Message, UserChatSettings
+- Socket.IO Gateway for:
+  - Join room
+  - Send message
+  - Seen/typing events
+
+5. 🔍 **Search System**
+- Global search endpoint:
+  - Search users by username or favorite game
+  - Search clans by name or tag
+  - Search tournaments by title or game
+- Add full-text index or Prisma-compatible LIKE logic
+- Add pagination + debounce-ready API
+- Endpoint: `/search?q=term&type=user|clan|tournament`
+
+---
+
+🎯 General Fixes
+- Add guards & roles to all new routes
+- Swagger docs for new endpoints
+- Update frontend interfaces if necessary (optional stubs)
+- Include realtime event names and payload structure
+- Comment key parts of code for maintainability
+- Clean structure for modules, services, DTOs, gateway
+
+Do not regenerate existing modules. Update and expand them correctly. Return updated and new files only. Keep the architecture modular and scalable.
+
+No explanations. Return real, working code only.

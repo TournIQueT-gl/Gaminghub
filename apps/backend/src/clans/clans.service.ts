@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
-import { CreateClanDto, UpdateClanDto, UpdateMemberRoleDto } from './dto/clan.dto';
+import { CreateClanDto, UpdateClanDto, UpdateMemberRoleDto, CreateClanPostDto } from './dto/clan.dto';
 import { ClanRole } from '@prisma/client';
 
 @Injectable()
@@ -23,13 +23,18 @@ export class ClansService {
       throw new BadRequestException('You are already a member of a clan');
     }
 
-    // Check if clan name is taken
-    const existingClan = await this.prisma.clan.findUnique({
-      where: { name: createClanDto.name },
+    // Check if clan name or tag is taken
+    const existingClan = await this.prisma.clan.findFirst({
+      where: {
+        OR: [
+          { name: createClanDto.name },
+          { tag: createClanDto.tag },
+        ],
+      },
     });
 
     if (existingClan) {
-      throw new BadRequestException('Clan name already taken');
+      throw new BadRequestException('Clan name or tag already taken');
     }
 
     const clan = await this.prisma.$transaction(async (tx) => {
@@ -37,6 +42,7 @@ export class ClansService {
       const newClan = await tx.clan.create({
         data: {
           name: createClanDto.name,
+          tag: createClanDto.tag,
           description: createClanDto.description,
           imageUrl: createClanDto.imageUrl,
           isPublic: createClanDto.isPublic ?? true,
@@ -164,17 +170,20 @@ export class ClansService {
       throw new ForbiddenException('Only leaders and co-leaders can update clan details');
     }
 
-    // Check if name is taken by another clan
-    if (updateClanDto.name) {
+    // Check if name or tag is taken by another clan
+    if (updateClanDto.name || updateClanDto.tag) {
       const existingClan = await this.prisma.clan.findFirst({
         where: {
-          name: updateClanDto.name,
+          OR: [
+            ...(updateClanDto.name ? [{ name: updateClanDto.name }] : []),
+            ...(updateClanDto.tag ? [{ tag: updateClanDto.tag }] : []),
+          ],
           NOT: { id: clanId },
         },
       });
 
       if (existingClan) {
-        throw new BadRequestException('Clan name already taken');
+        throw new BadRequestException('Clan name or tag already taken');
       }
     }
 
@@ -586,6 +595,97 @@ export class ClansService {
     }
 
     return membership;
+  }
+
+  async createClanPost(userId: string, clanId: number, createPostDto: CreateClanPostDto) {
+    // Verify user is member of the clan
+    const membership = await this.getUserClanRole(userId, clanId);
+
+    const post = await this.prisma.clanPost.create({
+      data: {
+        clanId,
+        userId,
+        content: createPostDto.content,
+        imageUrl: createPostDto.imageUrl,
+        isPinned: createPostDto.isPinned && (membership.role === ClanRole.LEADER || membership.role === ClanRole.CO_LEADER),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            profileImageUrl: true,
+            level: true,
+          },
+        },
+      },
+    });
+
+    // Award XP for clan activity
+    await this.usersService.addXP(userId, 5, 'Created clan post');
+    await this.addClanXP(clanId, 10, 'Member posted content');
+
+    return post;
+  }
+
+  async getClanPosts(clanId: number, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      this.prisma.clanPost.findMany({
+        where: { clanId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profileImageUrl: true,
+              level: true,
+            },
+          },
+        },
+        orderBy: [
+          { isPinned: 'desc' },
+          { createdAt: 'desc' },
+        ],
+        skip,
+        take: limit,
+      }),
+      this.prisma.clanPost.count({ where: { clanId } }),
+    ]);
+
+    return {
+      posts,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async disbandClan(userId: string, clanId: number) {
+    const clan = await this.prisma.clan.findUnique({
+      where: { id: clanId },
+    });
+
+    if (!clan) {
+      throw new NotFoundException('Clan not found');
+    }
+
+    if (clan.creatorId !== userId) {
+      throw new ForbiddenException('Only clan creator can disband the clan');
+    }
+
+    // Delete clan and all related data (cascade will handle memberships)
+    await this.prisma.clan.delete({
+      where: { id: clanId },
+    });
+
+    return { message: 'Clan disbanded successfully' };
   }
 
   private calculateClanLevel(xp: number): number {

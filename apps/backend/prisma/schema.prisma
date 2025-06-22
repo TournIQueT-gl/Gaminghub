@@ -11,38 +11,47 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  email            String?  @unique
-  username         String?  @unique
-  firstName        String?  @map("first_name")
-  lastName         String?  @map("last_name")
-  profileImageUrl  String?  @map("profile_image_url")
+  id               String     @id @default(cuid())
+  email            String?    @unique
+  username         String?    @unique
+  firstName        String?    @map("first_name")
+  lastName         String?    @map("last_name")
+  profileImageUrl  String?    @map("profile_image_url")
   bio              String?
   password         String?
-  xp               Int      @default(0)
-  level            Int      @default(1)
-  totalWins        Int      @default(0) @map("total_wins")
-  totalGames       Int      @default(0) @map("total_games")
-  isActive         Boolean  @default(true) @map("is_active")
-  lastLoginAt      DateTime? @map("last_login_at")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  favoriteGames    String[]   @map("favorite_games")
+  status           UserStatus @default(OFFLINE)
+  currentGame      String?    @map("current_game")
+  xp               Int        @default(0)
+  level            Int        @default(1)
+  totalWins        Int        @default(0) @map("total_wins")
+  totalGames       Int        @default(0) @map("total_games")
+  isActive         Boolean    @default(true) @map("is_active")
+  lastLoginAt      DateTime?  @map("last_login_at")
+  lastSeenAt       DateTime?  @map("last_seen_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
 
   // Relations
-  posts            Post[]
-  comments         Comment[]
-  likes            Like[]
-  followers        Follow[] @relation("UserFollowers")
-  following        Follow[] @relation("UserFollowing")
-  clanMemberships  ClanMembership[]
-  notifications    Notification[]
-  sentMessages     ChatMessage[] @relation("MessageSender")
-  roomMemberships  ChatRoomMembership[]
+  posts                  Post[]
+  comments               Comment[]
+  likes                  Like[]
+  followers              Follow[] @relation("UserFollowers")
+  following              Follow[] @relation("UserFollowing")
+  clanMemberships        ClanMembership[]
+  clanPosts              ClanPost[]
+  notifications          Notification[]
+  sentMessages           ChatMessage[] @relation("MessageSender")
+  messageReadStatus      MessageReadStatus[]
+  roomMemberships        ChatRoomMembership[]
   tournamentParticipants TournamentParticipant[]
-  createdTournaments Tournament[] @relation("TournamentCreator")
-  createdClans     Clan[] @relation("ClanCreator")
-  reportsMade      Report[] @relation("Reporter")
-  reportsAgainst   Report[] @relation("Reported")
+  createdTournaments     Tournament[] @relation("TournamentCreator")
+  createdClans           Clan[] @relation("ClanCreator")
+  reportsMade            Report[] @relation("Reporter")
+  reportsAgainst         Report[] @relation("Reported")
+  teamMemberships        TeamMember[]
+  captainedTeams         Team[] @relation("TeamCaptain")
+  chatSettings           UserChatSettings[]
 
   @@map("users")
 }
@@ -120,12 +129,16 @@ model Follow {
 model Clan {
   id           Int      @id @default(autoincrement())
   name         String   @unique
+  tag          String   @unique
   description  String?
   imageUrl     String?  @map("image_url")
   isPublic     Boolean  @default(true) @map("is_public")
   memberCount  Int      @default(1) @map("member_count")
+  maxMembers   Int      @default(50) @map("max_members")
   xp           Int      @default(0)
   level        Int      @default(1)
+  wins         Int      @default(0)
+  losses       Int      @default(0)
   creatorId    String   @map("creator_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -134,9 +147,26 @@ model Clan {
   creator      User             @relation("ClanCreator", fields: [creatorId], references: [id])
   memberships  ClanMembership[]
   chatRooms    ChatRoom[]
-  tournamentParticipants TournamentParticipant[]
+  posts        ClanPost[]
 
   @@map("clans")
+}
+
+model ClanPost {
+  id        Int      @id @default(autoincrement())
+  clanId    Int      @map("clan_id")
+  userId    String   @map("user_id")
+  content   String
+  imageUrl  String?  @map("image_url")
+  isPinned  Boolean  @default(false) @map("is_pinned")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  clan      Clan @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("clan_posts")
 }
 
 model ClanMembership {
@@ -165,16 +195,20 @@ model Tournament {
   prizePool       Decimal?         @map("prize_pool") @db.Decimal(10, 2)
   format          TournamentFormat @default(SINGLE_ELIMINATION)
   status          TournamentStatus @default(UPCOMING)
+  type            TournamentType   @default(SOLO)
   startDate       DateTime         @map("start_date")
   endDate         DateTime?        @map("end_date")
   creatorId       String           @map("creator_id")
   winnerId        String?          @map("winner_id")
+  winnerTeamId    Int?             @map("winner_team_id")
+  isPublic        Boolean          @default(true) @map("is_public")
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
   // Relations
   creator         User                     @relation("TournamentCreator", fields: [creatorId], references: [id])
   participants    TournamentParticipant[]
+  teams           Team[]
   matches         TournamentMatch[]
   chatRooms       ChatRoom[]
 
@@ -185,7 +219,7 @@ model TournamentParticipant {
   id           Int                      @id @default(autoincrement())
   tournamentId Int                      @map("tournament_id")
   userId       String?                  @map("user_id")
-  clanId       Int?                     @map("clan_id")
+  teamId       Int?                     @map("team_id")
   status       TournamentParticipantStatus @default(REGISTERED)
   seed         Int?
   joinedAt     DateTime                 @default(now()) @map("joined_at")
@@ -193,14 +227,47 @@ model TournamentParticipant {
   // Relations
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clan         Clan?      @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  team         Team?      @relation(fields: [teamId], references: [id], onDelete: Cascade)
   player1Matches TournamentMatch[] @relation("Player1")
   player2Matches TournamentMatch[] @relation("Player2")
   wonMatches   TournamentMatch[] @relation("Winner")
 
   @@unique([tournamentId, userId])
-  @@unique([tournamentId, clanId])
+  @@unique([tournamentId, teamId])
   @@map("tournament_participants")
+}
+
+model Team {
+  id           Int      @id @default(autoincrement())
+  name         String
+  tag          String?
+  avatarUrl    String?  @map("avatar_url")
+  tournamentId Int      @map("tournament_id")
+  captainId    String   @map("captain_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  tournament   Tournament                @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  captain      User                      @relation("TeamCaptain", fields: [captainId], references: [id])
+  members      TeamMember[]
+  participants TournamentParticipant[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       Int      @id @default(autoincrement())
+  teamId   Int      @map("team_id")
+  userId   String   @map("user_id")
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  // Relations
+  team     Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
 }
 
 model TournamentMatch {
@@ -259,19 +326,50 @@ model ChatRoomMembership {
 }
 
 model ChatMessage {
-  id        Int      @id @default(autoincrement())
-  roomId    Int      @map("room_id")
-  userId    String   @map("user_id")
+  id        Int         @id @default(autoincrement())
+  roomId    Int         @map("room_id")
+  userId    String      @map("user_id")
   content   String
   type      MessageType @default(TEXT)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  isEdited  Boolean     @default(false) @map("is_edited")
+  editedAt  DateTime?   @map("edited_at")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
 
   // Relations
-  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user      User     @relation("MessageSender", fields: [userId], references: [id], onDelete: Cascade)
+  room      ChatRoom           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User               @relation("MessageSender", fields: [userId], references: [id], onDelete: Cascade)
+  readBy    MessageReadStatus[]
 
   @@map("chat_messages")
+}
+
+model MessageReadStatus {
+  id        Int      @id @default(autoincrement())
+  messageId Int      @map("message_id")
+  userId    String   @map("user_id")
+  readAt    DateTime @default(now()) @map("read_at")
+
+  // Relations
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@map("message_read_status")
+}
+
+model UserChatSettings {
+  id               Int     @id @default(autoincrement())
+  userId           String  @map("user_id")
+  soundEnabled     Boolean @default(true) @map("sound_enabled")
+  notificationsEnabled Boolean @default(true) @map("notifications_enabled")
+  showOnlineStatus Boolean @default(true) @map("show_online_status")
+
+  // Relations
+  user             User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("user_chat_settings")
 }
 
 model Notification {
@@ -346,6 +444,11 @@ enum TournamentStatus {
   CANCELLED
 }
 
+enum TournamentType {
+  SOLO
+  TEAM
+}
+
 enum TournamentParticipantStatus {
   REGISTERED
   ACTIVE
@@ -394,4 +497,16 @@ enum ReportStatus {
   PENDING
   RESOLVED
   DISMISSED
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+  PLAYING
+}
+
+enum TeamRole {
+  CAPTAIN
+  MEMBER
 }

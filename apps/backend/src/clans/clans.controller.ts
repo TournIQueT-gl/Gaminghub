@@ -17,7 +17,7 @@ import { ClansService } from './clans.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { CreateClanDto, UpdateClanDto, UpdateMemberRoleDto } from './dto/clan.dto';
+import { CreateClanDto, UpdateClanDto, UpdateMemberRoleDto, CreateClanPostDto } from './dto/clan.dto';
 
 @ApiTags('clans')
 @Controller('clans')
@@ -148,5 +148,44 @@ export class ClansController {
     @Param('memberId') memberId: string,
   ) {
     return this.clansService.removeMember(userId, clanId, memberId);
+  }
+
+  @Post(':id/posts')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create clan post' })
+  @ApiResponse({ status: 201, description: 'Clan post created successfully' })
+  @ApiResponse({ status: 403, description: 'Not a clan member' })
+  async createClanPost(
+    @GetUser('id') userId: string,
+    @Param('id', ParseIntPipe) clanId: number,
+    @Body() createPostDto: CreateClanPostDto,
+  ) {
+    return this.clansService.createClanPost(userId, clanId, createPostDto);
+  }
+
+  @Get(':id/posts')
+  @Public()
+  @ApiOperation({ summary: 'Get clan posts' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiResponse({ status: 200, description: 'Clan posts retrieved' })
+  async getClanPosts(
+    @Param('id', ParseIntPipe) clanId: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.clansService.getClanPosts(clanId, page, limit);
+  }
+
+  @Delete(':id/disband')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Disband clan' })
+  @ApiResponse({ status: 200, description: 'Clan disbanded successfully' })
+  @ApiResponse({ status: 403, description: 'Only clan creator can disband' })
+  async disbandClan(
+    @GetUser('id') userId: string,
+    @Param('id', ParseIntPipe) clanId: number,
+  ) {
+    return this.clansService.disbandClan(userId, clanId);
   }
 }

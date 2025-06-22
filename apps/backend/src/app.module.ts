@@ -14,6 +14,7 @@ import { TournamentsModule } from './tournaments/tournaments.module';
 import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { HealthModule } from './health/health.module';
     ChatModule,
     NotificationsModule,
     HealthModule,
+    SearchModule,
   ],
 })
 export class AppModule {}

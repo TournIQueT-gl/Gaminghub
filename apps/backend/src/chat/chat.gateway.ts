@@ -237,6 +237,74 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('mark_message_read')
+  async handleMarkMessageRead(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { messageId: number },
+  ) {
+    if (!client.userId) {
+      client.emit('error', 'Not authenticated');
+      return;
+    }
+
+    try {
+      await this.prisma.messageReadStatus.upsert({
+        where: {
+          messageId_userId: {
+            messageId: data.messageId,
+            userId: client.userId,
+          },
+        },
+        update: { readAt: new Date() },
+        create: {
+          messageId: data.messageId,
+          userId: client.userId,
+        },
+      });
+
+      client.emit('message_read', {
+        messageId: data.messageId,
+        userId: client.userId,
+      });
+    } catch (error) {
+      client.emit('error', error.message);
+    }
+  }
+
+  @SubscribeMessage('get_unread_count')
+  async handleGetUnreadCount(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { roomId: number },
+  ) {
+    if (!client.userId) {
+      client.emit('error', 'Not authenticated');
+      return;
+    }
+
+    try {
+      const unreadCount = await this.prisma.chatMessage.count({
+        where: {
+          roomId: data.roomId,
+          NOT: {
+            readBy: {
+              some: {
+                userId: client.userId,
+              },
+            },
+          },
+          userId: { not: client.userId }, // Don't count own messages
+        },
+      });
+
+      client.emit('unread_count', {
+        roomId: data.roomId,
+        count: unreadCount,
+      });
+    } catch (error) {
+      client.emit('error', error.message);
+    }
+  }
+
   @SubscribeMessage('get_online_users')
   handleGetOnlineUsers(@ConnectedSocket() client: AuthenticatedSocket) {
     const onlineUsers = Array.from(this.connectedUsers.keys()).map(userId => {
