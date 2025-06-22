@@ -1,0 +1,397 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(cuid())
+  email            String?  @unique
+  username         String?  @unique
+  firstName        String?  @map("first_name")
+  lastName         String?  @map("last_name")
+  profileImageUrl  String?  @map("profile_image_url")
+  bio              String?
+  password         String?
+  xp               Int      @default(0)
+  level            Int      @default(1)
+  totalWins        Int      @default(0) @map("total_wins")
+  totalGames       Int      @default(0) @map("total_games")
+  isActive         Boolean  @default(true) @map("is_active")
+  lastLoginAt      DateTime? @map("last_login_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  posts            Post[]
+  comments         Comment[]
+  likes            Like[]
+  followers        Follow[] @relation("UserFollowers")
+  following        Follow[] @relation("UserFollowing")
+  clanMemberships  ClanMembership[]
+  notifications    Notification[]
+  sentMessages     ChatMessage[] @relation("MessageSender")
+  roomMemberships  ChatRoomMembership[]
+  tournamentParticipants TournamentParticipant[]
+  createdTournaments Tournament[] @relation("TournamentCreator")
+  createdClans     Clan[] @relation("ClanCreator")
+  reportsMade      Report[] @relation("Reporter")
+  reportsAgainst   Report[] @relation("Reported")
+
+  @@map("users")
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  content     String
+  imageUrl    String?  @map("image_url")
+  hashtags    String[]
+  likeCount   Int      @default(0) @map("like_count")
+  commentCount Int     @default(0) @map("comment_count")
+  shareCount  Int      @default(0) @map("share_count")
+  isPublic    Boolean  @default(true) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  likes       Like[]
+  reports     Report[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    String   @map("user_id")
+  content   String
+  likeCount Int      @default(0) @map("like_count")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  post      Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes     Like[]
+  reports   Report[]
+
+  @@map("comments")
+}
+
+model Like {
+  id         Int      @id @default(autoincrement())
+  userId     String   @map("user_id")
+  targetId   Int      @map("target_id")
+  targetType LikeType @map("target_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post       Post?     @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  comment    Comment?  @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetId, targetType])
+  @@map("likes")
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  follower    User @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Clan {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  description  String?
+  imageUrl     String?  @map("image_url")
+  isPublic     Boolean  @default(true) @map("is_public")
+  memberCount  Int      @default(1) @map("member_count")
+  xp           Int      @default(0)
+  level        Int      @default(1)
+  creatorId    String   @map("creator_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creator      User             @relation("ClanCreator", fields: [creatorId], references: [id])
+  memberships  ClanMembership[]
+  chatRooms    ChatRoom[]
+  tournamentParticipants TournamentParticipant[]
+
+  @@map("clans")
+}
+
+model ClanMembership {
+  id        Int      @id @default(autoincrement())
+  clanId    Int      @map("clan_id")
+  userId    String   @map("user_id")
+  role      ClanRole @default(MEMBER)
+  xp        Int      @default(0)
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  // Relations
+  clan      Clan @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clanId, userId])
+  @@map("clan_memberships")
+}
+
+model Tournament {
+  id              Int              @id @default(autoincrement())
+  name            String
+  description     String?
+  game            String
+  maxParticipants Int              @map("max_participants")
+  entryFee        Decimal?         @map("entry_fee") @db.Decimal(10, 2)
+  prizePool       Decimal?         @map("prize_pool") @db.Decimal(10, 2)
+  format          TournamentFormat @default(SINGLE_ELIMINATION)
+  status          TournamentStatus @default(UPCOMING)
+  startDate       DateTime         @map("start_date")
+  endDate         DateTime?        @map("end_date")
+  creatorId       String           @map("creator_id")
+  winnerId        String?          @map("winner_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  creator         User                     @relation("TournamentCreator", fields: [creatorId], references: [id])
+  participants    TournamentParticipant[]
+  matches         TournamentMatch[]
+  chatRooms       ChatRoom[]
+
+  @@map("tournaments")
+}
+
+model TournamentParticipant {
+  id           Int                      @id @default(autoincrement())
+  tournamentId Int                      @map("tournament_id")
+  userId       String?                  @map("user_id")
+  clanId       Int?                     @map("clan_id")
+  status       TournamentParticipantStatus @default(REGISTERED)
+  seed         Int?
+  joinedAt     DateTime                 @default(now()) @map("joined_at")
+
+  // Relations
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clan         Clan?      @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  player1Matches TournamentMatch[] @relation("Player1")
+  player2Matches TournamentMatch[] @relation("Player2")
+  wonMatches   TournamentMatch[] @relation("Winner")
+
+  @@unique([tournamentId, userId])
+  @@unique([tournamentId, clanId])
+  @@map("tournament_participants")
+}
+
+model TournamentMatch {
+  id           Int      @id @default(autoincrement())
+  tournamentId Int      @map("tournament_id")
+  round        Int
+  player1Id    Int?     @map("player1_id")
+  player2Id    Int?     @map("player2_id")
+  winnerId     Int?     @map("winner_id")
+  score        Json?
+  status       MatchStatus @default(SCHEDULED)
+  scheduledAt  DateTime? @map("scheduled_at")
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tournament   Tournament             @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player1      TournamentParticipant? @relation("Player1", fields: [player1Id], references: [id])
+  player2      TournamentParticipant? @relation("Player2", fields: [player2Id], references: [id])
+  winner       TournamentParticipant? @relation("Winner", fields: [winnerId], references: [id])
+
+  @@map("tournament_matches")
+}
+
+model ChatRoom {
+  id           Int      @id @default(autoincrement())
+  name         String?
+  type         ChatRoomType @default(PUBLIC)
+  tournamentId Int?     @map("tournament_id")
+  clanId       Int?     @map("clan_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tournament   Tournament?           @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  clan         Clan?                 @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  memberships  ChatRoomMembership[]
+  messages     ChatMessage[]
+
+  @@map("chat_rooms")
+}
+
+model ChatRoomMembership {
+  id       Int      @id @default(autoincrement())
+  roomId   Int      @map("room_id")
+  userId   String   @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  // Relations
+  room     ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@map("chat_room_memberships")
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  roomId    Int      @map("room_id")
+  userId    String   @map("user_id")
+  content   String
+  type      MessageType @default(TEXT)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User     @relation("MessageSender", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    String           @map("user_id")
+  title     String
+  message   String
+  type      NotificationType @default(GENERAL)
+  isRead    Boolean          @default(false) @map("is_read")
+  data      Json?
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Report {
+  id         Int        @id @default(autoincrement())
+  reporterId String     @map("reporter_id")
+  reportedId String     @map("reported_id")
+  targetId   Int        @map("target_id")
+  targetType ReportType @map("target_type")
+  reason     String
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  resolvedAt DateTime?  @map("resolved_at")
+
+  // Relations
+  reporter   User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported   User     @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+  post       Post?    @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  comment    Comment? @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+// Sessions table for authentication
+model Session {
+  id        String   @id @default(cuid())
+  sid       String   @unique
+  data      String
+  expiresAt DateTime @map("expires_at")
+
+  @@map("sessions")
+}
+
+// Enums
+enum LikeType {
+  POST
+  COMMENT
+}
+
+enum ClanRole {
+  MEMBER
+  CO_LEADER
+  LEADER
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  ROUND_ROBIN
+  SWISS
+}
+
+enum TournamentStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum TournamentParticipantStatus {
+  REGISTERED
+  ACTIVE
+  ELIMINATED
+  WINNER
+}
+
+enum MatchStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ChatRoomType {
+  PUBLIC
+  PRIVATE
+  CLAN
+  TOURNAMENT
+  DIRECT_MESSAGE
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+enum NotificationType {
+  GENERAL
+  FOLLOW
+  LIKE
+  COMMENT
+  TOURNAMENT
+  CLAN
+  SYSTEM
+}
+
+enum ReportType {
+  POST
+  COMMENT
+  USER
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
