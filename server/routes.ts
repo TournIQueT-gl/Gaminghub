@@ -129,6 +129,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user achievements
+  app.get('/api/users/:id/achievements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Mock achievements data - in a real app, this would come from the database
+      const mockAchievements = [
+        {
+          id: 'first_post',
+          title: 'First Post',
+          description: 'Share your first gaming experience',
+          rarity: 'common',
+          unlockedAt: new Date('2024-01-15'),
+          progress: 1,
+          maxProgress: 1,
+        },
+        {
+          id: 'level_10',
+          title: 'Level 10 Warrior',
+          description: 'Reach level 10',
+          rarity: 'rare',
+          unlockedAt: new Date('2024-02-01'),
+          progress: 10,
+          maxProgress: 10,
+        },
+        {
+          id: 'clan_leader',
+          title: 'Clan Leader',
+          description: 'Lead a clan to victory',
+          rarity: 'epic',
+          progress: 0,
+          maxProgress: 1,
+        },
+        {
+          id: 'tournament_champion',
+          title: 'Tournament Champion',
+          description: 'Win your first tournament',
+          rarity: 'legendary',
+          progress: 0,
+          maxProgress: 1,
+        },
+        {
+          id: 'social_butterfly',
+          title: 'Social Butterfly',
+          description: 'Follow 100 users',
+          rarity: 'rare',
+          progress: 25,
+          maxProgress: 100,
+        },
+      ];
+      
+      res.json(mockAchievements);
+    } catch (error) {
+      console.error("Error fetching user achievements:", error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // Get user game statistics
+  app.get('/api/users/:id/game-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Mock game stats - in a real app, this would come from the database or external APIs
+      const mockGameStats = [
+        {
+          game: 'Valorant',
+          hoursPlayed: 245,
+          rank: 'Diamond',
+          level: 85,
+          winRate: 67,
+          lastPlayed: new Date('2024-01-20'),
+        },
+        {
+          game: 'League of Legends',
+          hoursPlayed: 182,
+          rank: 'Gold II',
+          level: 45,
+          winRate: 58,
+          lastPlayed: new Date('2024-01-18'),
+        },
+        {
+          game: 'CS2',
+          hoursPlayed: 156,
+          rank: 'Master Guardian',
+          level: 32,
+          winRate: 72,
+          lastPlayed: new Date('2024-01-15'),
+        },
+      ];
+      
+      res.json(mockGameStats);
+    } catch (error) {
+      console.error("Error fetching user game stats:", error);
+      res.status(500).json({ message: "Failed to fetch game stats" });
+    }
+  });
+
+  // Follow/Unfollow user
+  app.post('/api/users/:id/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const followerId = req.user.claims.sub;
+      
+      if (targetUserId === followerId) {
+        return res.status(400).json({ message: "You cannot follow yourself" });
+      }
+      
+      const follow = await storage.followUser(followerId, targetUserId);
+      res.json({ message: "User followed successfully", follow });
+    } catch (error) {
+      console.error("Error following user:", error);
+      res.status(500).json({ message: "Failed to follow user" });
+    }
+  });
+
+  app.post('/api/users/:id/unfollow', isAuthenticated, async (req: any, res) => {
+    try {
+      const targetUserId = req.params.id;
+      const followerId = req.user.claims.sub;
+      
+      await storage.unfollowUser(followerId, targetUserId);
+      res.json({ message: "User unfollowed successfully" });
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+      res.status(500).json({ message: "Failed to unfollow user" });
+    }
+  });
+
+  // Get user analytics (profile owner only)
+  app.get('/api/users/:id/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const requesterId = req.user.claims.sub;
+      
+      // Only allow users to view their own analytics
+      if (userId !== requesterId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Mock analytics data - in a real app, this would come from the database
+      const mockAnalytics = {
+        totalViews: 2847,
+        viewsChange: 12.5,
+        engagement: 76,
+        engagementChange: -2.3,
+        followersGained: 45,
+        followersChange: 8.1,
+        postsThisWeek: 7,
+        postsChange: 16.7,
+        topPerformingPost: {
+          id: 1,
+          title: "My epic Valorant clutch!",
+          likes: 156,
+          views: 892,
+        },
+        monthlyStats: [
+          { month: "January", posts: 23, likes: 456, views: 1234 },
+          { month: "December", posts: 18, likes: 389, views: 1089 },
+          { month: "November", posts: 25, likes: 512, views: 1456 },
+        ]
+      };
+      
+      res.json(mockAnalytics);
+    } catch (error) {
+      console.error("Error fetching user analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   // Update user notification settings (placeholder)
   app.patch('/api/users/notifications', isAuthenticated, async (req: any, res) => {
     try {

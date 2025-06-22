@@ -11,7 +11,7 @@ import Tournaments from "@/pages/tournaments";
 import Clans from "@/pages/clans";
 import ClanDetails from "@/pages/clan-details";
 import Messages from "@/pages/messages";
-import Profile from "@/pages/profile";
+import ProfileNew from "@/pages/profile-new";
 import Settings from "@/pages/settings";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,7 +29,7 @@ function Router() {
           <Route path="/clans" component={Clans} />
           <Route path="/clan/:id" component={ClanDetails} />
           <Route path="/messages" component={Messages} />
-          <Route path="/profile/:userId?" component={Profile} />
+          <Route path="/profile/:userId?" component={ProfileNew} />
           <Route path="/settings" component={Settings} />
         </>
       )}
