@@ -309,6 +309,9 @@ export const insertTournamentSchema = createInsertSchema(tournaments).omit({
   id: true,
   currentParticipants: true,
   createdAt: true,
+}).extend({
+  startDate: z.string().datetime().or(z.date()),
+  endDate: z.string().datetime().or(z.date()).optional(),
 });
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({

@@ -104,19 +104,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/users/profile', isAuthenticated, async (req: any, res) => {
+  // Update user profile
+  app.patch('/api/users/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const updateData = req.body;
       
-      const user = await storage.upsertUser({
-        id: userId,
+      // Get current user and merge with updates
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await storage.upsertUser({
+        ...currentUser,
         ...updateData,
+        id: userId,
       });
       
-      res.json(user);
+      res.json(updatedUser);
     } catch (error) {
+      console.error("Error updating user profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Update user notification settings (placeholder)
+  app.patch('/api/users/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      // In a real app, you'd store notification preferences
+      res.json({ message: "Notification settings updated" });
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      res.status(500).json({ message: "Failed to update notification settings" });
     }
   });
 
@@ -357,6 +377,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/clans/:id/members', async (req, res) => {
     try {
       const clanId = parseInt(req.params.id);
+      const members = await storage.getClanMembers(clanId);
+      res.json(members);
+    } catch (error) {
+      console.error("Error fetching clan members:", error);
+      res.status(500).json({ message: "Failed to fetch clan members" });
+    }
+  });
+
+  app.get('/api/clans/:id/members', async (req, res) => {
+    try {
+      const clanId = parseInt(req.params.id);
       
       if (isNaN(clanId)) {
         return res.status(400).json({ message: "Invalid clan ID" });
@@ -383,12 +414,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/tournaments', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const tournamentData = insertTournamentSchema.parse({ ...req.body, createdBy: userId });
       
+      // Process the tournament data
+      const processedData = {
+        ...req.body,
+        createdBy: userId,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : new Date(),
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+      };
+      
+      const tournamentData = insertTournamentSchema.parse(processedData);
       const tournament = await tournamentService.createTournament(tournamentData, userId);
       res.json(tournament);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Tournament validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid tournament data", errors: error.errors });
       }
       console.error("Error creating tournament:", error);

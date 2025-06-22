@@ -9,8 +9,10 @@ import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Tournaments from "@/pages/tournaments";
 import Clans from "@/pages/clans";
+import ClanDetails from "@/pages/clan-details";
 import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
+import Settings from "@/pages/settings";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -25,8 +27,10 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/tournaments" component={Tournaments} />
           <Route path="/clans" component={Clans} />
+          <Route path="/clan/:id" component={ClanDetails} />
           <Route path="/messages" component={Messages} />
-          <Route path="/profile" component={Profile} />
+          <Route path="/profile/:userId?" component={Profile} />
+          <Route path="/settings" component={Settings} />
         </>
       )}
       <Route component={NotFound} />

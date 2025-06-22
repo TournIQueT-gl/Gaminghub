@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
+import { useParams, Link } from "wouter";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
+import { LoadingPage } from "@/components/loading-spinner";
+import PostCard from "@/components/post-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -23,19 +27,22 @@ import {
   Camera,
   Sparkles,
   TrendingUp,
-  Calendar
+  Calendar,
+  Shield,
+  Heart,
+  MessageCircle,
+  Share2
 } from "lucide-react";
 
 export default function Profile() {
-  const [profileData, setProfileData] = useState({
-    username: '',
-    bio: '',
-    gamePreferences: [] as string[],
-  });
-  const [gameInput, setGameInput] = useState('');
-  
+  const params = useParams();
+  const targetUserId = params.userId || null;
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  
+  // Use current user if no userId param, otherwise use the param
+  const profileUserId = targetUserId || user?.id;
+  const isOwnProfile = !targetUserId || targetUserId === user?.id;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
