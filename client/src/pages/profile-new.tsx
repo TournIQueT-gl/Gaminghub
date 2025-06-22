@@ -348,7 +348,7 @@ export default function ProfileNew() {
                       <div>
                         <div className="flex items-center gap-3 mb-2">
                           <h1 className="text-3xl font-bold text-white">{displayUser?.username || 'Anonymous Gamer'}</h1>
-                          {displayUser?.verified && (
+                          {displayUser?.isVerified && (
                             <Badge className="bg-gaming-blue text-white">
                               <Shield className="w-3 h-3 mr-1" />
                               Verified
@@ -387,7 +387,7 @@ export default function ProfileNew() {
                           )}
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            Joined {new Date(displayUser?.createdAt).toLocaleDateString()}
+                            Joined {displayUser?.createdAt ? new Date(displayUser.createdAt).toLocaleDateString() : 'Recently'}
                           </div>
                         </div>
                       </div>
@@ -591,26 +591,26 @@ export default function ProfileNew() {
             {displayStats.clanMembership && (
               <Card className="bg-gaming-card border-gaming-card-hover">
                 <CardContent className="p-6">
-                  <Link href={`/clan/${displayStats.clanMembership.clan.id}`}>
+                  <Link href={`/clan/${displayStats.clanMembership.id}`}>
                     <div className="flex items-center space-x-4 hover:bg-gaming-card-hover p-4 rounded-lg transition-colors cursor-pointer">
                       <div className="w-16 h-16 bg-gradient-to-br from-gaming-purple to-gaming-blue rounded-xl flex items-center justify-center">
                         <Shield className="w-8 h-8 text-white" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-bold text-white">{displayStats.clanMembership.clan.name}</h3>
+                          <h3 className="text-xl font-bold text-white">{displayStats.clanMembership.name}</h3>
                           <Badge className={displayStats.clanMembership.role === 'leader' ? 'bg-gaming-gold text-black' : 'bg-gaming-blue text-white'}>
                             {displayStats.clanMembership.role === 'leader' && <Crown className="w-3 h-3 mr-1" />}
                             {displayStats.clanMembership.role}
                           </Badge>
                         </div>
                         <p className="text-gaming-text-dim">
-                          {displayStats.clanMembership.clan.memberCount} members • {displayStats.clanMembership.clan.xp || 0} XP
+                          Clan member
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-gaming-text-dim">Member since</div>
-                        <div className="text-white">{new Date(displayStats.clanMembership.joinedAt).toLocaleDateString()}</div>
+                        <div className="text-sm text-gaming-text-dim">Member</div>
+                        <div className="text-white">Active</div>
                       </div>
                     </div>
                   </Link>

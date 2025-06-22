@@ -2,6 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Gaming theme colors */
+    --gaming-dark: #0a0a0a;
+    --gaming-darker: #0d1117;
+    --gaming-card: #161b22;
+    --gaming-card-hover: #21262d;
+    --gaming-purple: #8b5cf6;
+    --gaming-blue: #3b82f6;
+    --gaming-emerald: #10b981;
+    --gaming-gold: #f59e0b;
+    --gaming-text: #f1f5f9;
+    --gaming-text-dim: #94a3b8;
+
+    /* Shadcn variables */
+    --background: var(--gaming-dark);
+    --foreground: var(--gaming-text);
+    --card: var(--gaming-card);
+    --card-foreground: var(--gaming-text);
+    --popover: var(--gaming-card);
+    --popover-foreground: var(--gaming-text);
+    --primary: var(--gaming-purple);
+    --primary-foreground: #ffffff;
+    --secondary: var(--gaming-darker);
+    --secondary-foreground: var(--gaming-text);
+    --muted: var(--gaming-darker);
+    --muted-foreground: var(--gaming-text-dim);
+    --accent: var(--gaming-card-hover);
+    --accent-foreground: var(--gaming-text);
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: var(--gaming-card-hover);
+    --input: var(--gaming-darker);
+    --ring: var(--gaming-purple);
+    --radius: 0.5rem;
+  }
+}
+
+body {
+  background-color: var(--gaming-dark);
+  color: var(--gaming-text);
+  font-family: "Inter", sans-serif;
+}
+
+/* Gaming theme utilities */
+.bg-gaming-dark { background-color: var(--gaming-dark); }
+.bg-gaming-darker { background-color: var(--gaming-darker); }
+.bg-gaming-card { background-color: var(--gaming-card); }
+.bg-gaming-card-hover { background-color: var(--gaming-card-hover); }
+.bg-gaming-blue { background-color: var(--gaming-blue); }
+.bg-gaming-purple { background-color: var(--gaming-purple); }
+.bg-gaming-emerald { background-color: var(--gaming-emerald); }
+.bg-gaming-gold { background-color: var(--gaming-gold); }
+
+.text-gaming-text { color: var(--gaming-text); }
+.text-gaming-text-dim { color: var(--gaming-text-dim); }
+.text-gaming-blue { color: var(--gaming-blue); }
+.text-gaming-purple { color: var(--gaming-purple); }
+.text-gaming-emerald { color: var(--gaming-emerald); }
+.text-gaming-gold { color: var(--gaming-gold); }
+
+.border-gaming-card { border-color: var(--gaming-card); }
+.border-gaming-card-hover { border-color: var(--gaming-card-hover); }
+.border-gaming-blue { border-color: var(--gaming-blue); }
+.border-gaming-purple { border-color: var(--gaming-purple); }
+.border-gaming-emerald { border-color: var(--gaming-emerald); }
+.border-gaming-gold { border-color: var(--gaming-gold); }
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);

@@ -59,10 +59,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/users/:id/stats', async (req, res) => {
     try {
       const userId = req.params.id;
-      const user = await storage.getUser(userId);
+      let user = await storage.getUser(userId);
       
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        // Auto-create user if accessing their own stats
+        if (req.headers.authorization || req.user?.claims?.sub === userId) {
+          user = await storage.upsertUser({
+            id: userId,
+            email: req.user?.claims?.email || `user${userId}@example.com`,
+            firstName: req.user?.claims?.first_name || "User",
+            lastName: req.user?.claims?.last_name || "",
+            profileImageUrl: req.user?.claims?.profile_image_url || null,
+          });
+        } else {
+          return res.status(404).json({ message: "User not found" });
+        }
       }
 
       const posts = await storage.getPostsByUserId(userId);
@@ -91,6 +102,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/users/clan-membership', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // First ensure the user exists in storage
+      let user = await storage.getUser(userId);
+      if (!user) {
+        // Auto-create user if they don't exist
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email,
+          firstName: req.user.claims.first_name,
+          lastName: req.user.claims.last_name,
+          profileImageUrl: req.user.claims.profile_image_url,
+        });
+      }
+      
       const membership = await storage.getUserClanMembership(userId);
       
       if (!membership) {
@@ -110,16 +135,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const updateData = req.body;
       
-      // Get current user and merge with updates
-      const currentUser = await storage.getUser(userId);
-      if (!currentUser) {
-        return res.status(404).json({ message: "User not found" });
+      // Validate required data
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
       }
       
+      // Get current user
+      let currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        // Auto-create user if they don't exist
+        currentUser = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email,
+          firstName: req.user.claims.first_name,
+          lastName: req.user.claims.last_name,
+          profileImageUrl: req.user.claims.profile_image_url,
+        });
+      }
+      
+      // Update user with new data
       const updatedUser = await storage.upsertUser({
-        ...currentUser,
-        ...updateData,
         id: userId,
+        ...updateData,
       });
       
       res.json(updatedUser);

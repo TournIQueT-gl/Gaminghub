@@ -57,10 +57,21 @@ export class MemoryStorage implements IStorage {
   async upsertUser(userData: UpsertUser): Promise<User> {
     const existing = this.users.get(userData.id!);
     const user: User = {
-      ...existing,
-      ...userData,
       id: userData.id!,
-      createdAt: existing?.createdAt || new Date(),
+      email: userData.email !== undefined ? userData.email : existing?.email || null,
+      firstName: userData.firstName !== undefined ? userData.firstName : existing?.firstName || null,
+      lastName: userData.lastName !== undefined ? userData.lastName : existing?.lastName || null,
+      profileImageUrl: userData.profileImageUrl !== undefined ? userData.profileImageUrl : existing?.profileImageUrl || null,
+      username: userData.username !== undefined ? userData.username : existing?.username || `User${Math.floor(Math.random() * 1000)}`,
+      bio: userData.bio !== undefined ? userData.bio : existing?.bio || null,
+      location: userData.location !== undefined ? userData.location : existing?.location || null,
+      website: userData.website !== undefined ? userData.website : existing?.website || null,
+      favoriteGames: userData.favoriteGames !== undefined ? userData.favoriteGames : existing?.favoriteGames || [],
+      level: userData.level !== undefined ? userData.level : existing?.level || 1,
+      xp: userData.xp !== undefined ? userData.xp : existing?.xp || 0,
+      role: userData.role !== undefined ? userData.role : existing?.role || "user",
+      isVerified: userData.isVerified !== undefined ? userData.isVerified : existing?.isVerified || false,
+      createdAt: existing?.createdAt || userData.createdAt || new Date(),
       updatedAt: new Date(),
     };
     this.users.set(user.id, user);

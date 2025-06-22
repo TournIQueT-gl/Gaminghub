@@ -64,6 +64,16 @@ async function upsertUser(
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    username: claims["username"] || `${claims["first_name"] || "User"}${Math.floor(Math.random() * 1000)}`,
+    bio: '',
+    location: '',
+    website: '',
+    favoriteGames: [],
+    level: 1,
+    xp: 0,
+    isVerified: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
 }
 

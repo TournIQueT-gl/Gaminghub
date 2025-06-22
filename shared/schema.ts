@@ -35,6 +35,9 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   username: varchar("username").unique(),
   bio: text("bio"),
+  location: varchar("location"),
+  website: varchar("website"),
+  favoriteGames: text("favorite_games").array(),
   level: integer("level").default(1),
   xp: integer("xp").default(0),
   role: varchar("role").default("user"), // user, mod, admin
