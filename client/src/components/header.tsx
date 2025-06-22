@@ -1,0 +1,56 @@
+import { Search, Bell, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+
+interface HeaderProps {
+  title: string;
+}
+
+export default function Header({ title }: HeaderProps) {
+  const { user } = useAuth();
+
+  return (
+    <header className="bg-gaming-darker border-b border-gaming-card p-4 sticky top-0 z-20">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gaming-text-dim">Live users:</span>
+            <span className="text-sm font-mono text-gaming-emerald">1,247</span>
+            <div className="w-2 h-2 bg-gaming-emerald rounded-full animate-pulse"></div>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gaming-text-dim" />
+            <Input
+              placeholder="Search posts, users, tournaments..."
+              className="bg-gaming-card border-gaming-card-hover rounded-lg pl-10 w-80 text-sm focus:border-gaming-blue transition-colors"
+            />
+          </div>
+
+          {/* Notifications */}
+          <Button variant="ghost" size="icon" className="relative p-2 rounded-lg hover:bg-gaming-card">
+            <Bell className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 bg-gaming-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              7
+            </span>
+          </Button>
+
+          {/* User Menu */}
+          <Button variant="ghost" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gaming-card">
+            <img 
+              src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"} 
+              alt="User menu" 
+              className="w-8 h-8 rounded-lg object-cover"
+            />
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+}

@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+
+  /* Gaming theme colors */
+  --gaming-dark: hsl(240, 60%, 6%);
+  --gaming-darker: hsl(240, 75%, 4%);
+  --gaming-card: hsl(240, 45%, 12%);
+  --gaming-card-hover: hsl(240, 45%, 16%);
+  --gaming-blue: hsl(195, 100%, 50%);
+  --gaming-purple: hsl(271, 81%, 56%);
+  --gaming-emerald: hsl(165, 84%, 39%);
+  --gaming-red: hsl(0, 84%, 60%);
+  --gaming-text: hsl(210, 20%, 90%);
+  --gaming-text-dim: hsl(210, 14%, 64%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--gaming-dark);
+    color: var(--gaming-text);
+  }
+
+  /* Gaming theme utilities */
+  .bg-gaming-dark { background-color: var(--gaming-dark); }
+  .bg-gaming-darker { background-color: var(--gaming-darker); }
+  .bg-gaming-card { background-color: var(--gaming-card); }
+  .bg-gaming-card-hover { background-color: var(--gaming-card-hover); }
+  .bg-gaming-blue { background-color: var(--gaming-blue); }
+  .bg-gaming-purple { background-color: var(--gaming-purple); }
+  .bg-gaming-emerald { background-color: var(--gaming-emerald); }
+  .bg-gaming-red { background-color: var(--gaming-red); }
+  
+  .text-gaming-text { color: var(--gaming-text); }
+  .text-gaming-text-dim { color: var(--gaming-text-dim); }
+  .text-gaming-blue { color: var(--gaming-blue); }
+  .text-gaming-purple { color: var(--gaming-purple); }
+  .text-gaming-emerald { color: var(--gaming-emerald); }
+  .text-gaming-red { color: var(--gaming-red); }
+  
+  .border-gaming-card { border-color: var(--gaming-card); }
+  .border-gaming-card-hover { border-color: var(--gaming-card-hover); }
+  .border-gaming-blue { border-color: var(--gaming-blue); }
+  .border-gaming-purple { border-color: var(--gaming-purple); }
+  .border-gaming-emerald { border-color: var(--gaming-emerald); }
+
+  /* Gaming gradients */
+  .gaming-gradient {
+    background: linear-gradient(135deg, var(--gaming-blue) 0%, var(--gaming-purple) 100%);
+  }
+  
+  .clan-badge {
+    background: linear-gradient(135deg, var(--gaming-purple) 0%, var(--gaming-blue) 100%);
+  }
+
+  /* Custom animations */
+  @keyframes glow {
+    from { box-shadow: 0 0 20px hsl(195, 100%, 50%, 0.25); }
+    to { box-shadow: 0 0 30px hsl(195, 100%, 50%, 0.4), 0 0 40px hsl(195, 100%, 50%, 0.25); }
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  /* Scrollbar styling */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom gaming scrollbar */
+  .scrollbar-gaming::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-gaming::-webkit-scrollbar-track {
+    background: var(--gaming-darker);
+  }
+  
+  .scrollbar-gaming::-webkit-scrollbar-thumb {
+    background: var(--gaming-blue);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-gaming::-webkit-scrollbar-thumb:hover {
+    background: var(--gaming-purple);
+  }
+}
