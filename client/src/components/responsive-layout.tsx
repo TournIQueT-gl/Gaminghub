@@ -35,7 +35,7 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-gaming-dark text-gaming-text">
+    <div className="mobile-container min-h-screen bg-gaming-dark text-gaming-text">
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div 
@@ -46,7 +46,7 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-64 bg-gaming-darker border-r border-gaming-card-hover z-50 transform transition-transform duration-300
+        fixed top-0 left-0 h-full w-72 sm:w-64 bg-gaming-darker border-r border-gaming-card-hover z-50 transform transition-transform duration-300
         ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
       `}>
         <Sidebar onItemClick={() => setSidebarOpen(false)} />
@@ -56,18 +56,21 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
       <div className={`flex flex-col min-h-screen ${!isMobile ? 'ml-64' : ''}`}>
         {/* Header */}
         <div className="sticky top-0 z-30 bg-gaming-card border-b border-gaming-card-hover">
-          <div className="flex items-center justify-between p-4">
+          <div className="flex items-center p-3 sm:p-4">
             {/* Mobile menu button */}
             {isMobile && (
               <button 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg bg-gaming-darker border border-gaming-card-hover text-white hover:bg-gaming-card transition-colors"
+                className="mr-3 p-2 rounded-lg bg-gaming-darker border border-gaming-card-hover text-white hover:bg-gaming-card transition-colors touch-manipulation"
+                aria-label="Toggle menu"
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             )}
             
-            <Header title={title} />
+            <div className="flex-1 min-w-0">
+              <Header title={title} />
+            </div>
           </div>
         </div>
 

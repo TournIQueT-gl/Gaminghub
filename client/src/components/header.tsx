@@ -18,30 +18,31 @@ export default function Header({ title }: HeaderProps) {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 md:space-x-4 flex-1 min-w-0">
-          <h2 className="text-lg md:text-2xl font-bold text-white truncate">{title}</h2>
-          <div className="hidden lg:flex items-center space-x-2">
-            <span className="text-xs md:text-sm text-gaming-text-dim">Live:</span>
-            <span className="text-xs md:text-sm font-mono text-gaming-emerald">1,247</span>
-            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gaming-emerald rounded-full animate-pulse"></div>
+        <div className="flex items-center space-x-2 flex-1 min-w-0">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate">{title}</h2>
+          <div className="hidden sm:flex items-center space-x-1 md:space-x-2">
+            <span className="text-xs text-gaming-text-dim">Live:</span>
+            <span className="text-xs font-mono text-gaming-emerald">1,247</span>
+            <div className="w-1 h-1 md:w-1.5 md:h-1.5 bg-gaming-emerald rounded-full animate-pulse"></div>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2 md:space-x-4">
+        <div className="flex items-center space-x-1 sm:space-x-2">
           {/* Search Toggle for Mobile */}
           <button 
             onClick={() => setSearchVisible(!searchVisible)}
-            className="md:hidden p-2 text-gaming-text-dim hover:text-white transition-colors"
+            className="sm:hidden p-2 rounded-lg text-gaming-text-dim hover:text-white transition-colors touch-manipulation"
+            aria-label="Search"
           >
             <Search className="w-4 h-4" />
           </button>
 
           {/* Desktop Search Bar */}
-          <div className="hidden md:block relative">
+          <div className="hidden sm:block relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gaming-text-dim" />
             <Input
-              placeholder="Search posts, users, tournaments..."
-              className="bg-gaming-card border-gaming-card-hover rounded-lg pl-10 w-48 lg:w-80 text-sm focus:border-gaming-blue transition-colors"
+              placeholder="Search..."
+              className="bg-gaming-card border-gaming-card-hover rounded-lg pl-10 w-32 md:w-48 lg:w-64 text-sm focus:border-gaming-blue transition-colors"
             />
           </div>
 
@@ -97,12 +98,12 @@ export default function Header({ title }: HeaderProps) {
       
       {/* Mobile Search Bar */}
       {searchVisible && (
-        <div className="mt-3 md:hidden">
+        <div className="mt-3 sm:hidden">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gaming-text-dim" />
             <Input
               placeholder="Search posts, users, tournaments..."
-              className="bg-gaming-card border-gaming-card-hover rounded-lg pl-10 w-full text-sm focus:border-gaming-blue transition-colors"
+              className="bg-gaming-card border-gaming-card-hover rounded-lg pl-10 w-full text-sm focus:border-gaming-blue transition-colors min-h-[44px]"
             />
           </div>
         </div>
