@@ -217,53 +217,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.params.id;
       
-      // Mock achievements data - in a real app, this would come from the database
-      const mockAchievements = [
+      // Get current user for dynamic achievements
+      const currentUser = await storage.getUser(userId);
+      const userPosts = await storage.getPostsByUserId(userId);
+      const followers = await storage.getUserFollowers(userId);
+      const following = await storage.getUserFollowing(userId);
+
+      function calculateProfileCompletion(user: any): number {
+        if (!user) return 0;
+        let completion = 0;
+        const checks = [
+          { field: 'profileImageUrl', weight: 15 },
+          { field: 'bio', weight: 20, condition: (val: string) => val && val.length > 10 },
+          { field: 'location', weight: 15 },
+          { field: 'website', weight: 15 },
+          { field: 'favoriteGames', weight: 20, condition: (val: any[]) => val && val.length >= 3 },
+          { field: 'socialLinks', weight: 15, condition: (val: any[]) => val && val.length > 0 },
+        ];
+        
+        checks.forEach(check => {
+          const value = user[check.field];
+          if (check.condition) {
+            if (check.condition(value)) completion += check.weight;
+          } else if (value) {
+            completion += check.weight;
+          }
+        });
+        
+        return completion;
+      }
+
+      // Dynamic achievements based on actual user data
+      const userAchievements = [
         {
           id: 'first_post',
-          title: 'First Post',
+          title: 'First Steps',
           description: 'Share your first gaming experience',
           rarity: 'common',
-          unlockedAt: new Date('2024-01-15'),
-          progress: 1,
+          unlockedAt: userPosts.length > 0 ? userPosts[0].createdAt : null,
+          progress: userPosts.length > 0 ? 1 : 0,
           maxProgress: 1,
         },
         {
-          id: 'level_10',
-          title: 'Level 10 Warrior',
-          description: 'Reach level 10',
+          id: 'prolific_poster',
+          title: 'Content Creator',
+          description: 'Share 10 gaming posts',
           rarity: 'rare',
-          unlockedAt: new Date('2024-02-01'),
-          progress: 10,
+          unlockedAt: userPosts.length >= 10 ? userPosts[9]?.createdAt : null,
+          progress: userPosts.length,
           maxProgress: 10,
         },
         {
-          id: 'clan_leader',
-          title: 'Clan Leader',
-          description: 'Lead a clan to victory',
-          rarity: 'epic',
-          progress: 0,
-          maxProgress: 1,
+          id: 'level_5',
+          title: 'Rising Gamer',
+          description: 'Reach level 5',
+          rarity: 'common',
+          unlockedAt: (currentUser?.level || 1) >= 5 ? new Date() : null,
+          progress: currentUser?.level || 1,
+          maxProgress: 5,
         },
         {
-          id: 'tournament_champion',
-          title: 'Tournament Champion',
-          description: 'Win your first tournament',
+          id: 'level_10',
+          title: 'Veteran Gamer',
+          description: 'Reach level 10',
+          rarity: 'rare',
+          unlockedAt: (currentUser?.level || 1) >= 10 ? new Date() : null,
+          progress: currentUser?.level || 1,
+          maxProgress: 10,
+        },
+        {
+          id: 'level_25',
+          title: 'Elite Player',
+          description: 'Reach level 25',
+          rarity: 'epic',
+          unlockedAt: (currentUser?.level || 1) >= 25 ? new Date() : null,
+          progress: currentUser?.level || 1,
+          maxProgress: 25,
+        },
+        {
+          id: 'level_50',
+          title: 'Gaming Legend',
+          description: 'Reach level 50',
           rarity: 'legendary',
-          progress: 0,
-          maxProgress: 1,
+          unlockedAt: (currentUser?.level || 1) >= 50 ? new Date() : null,
+          progress: currentUser?.level || 1,
+          maxProgress: 50,
+        },
+        {
+          id: 'social_starter',
+          title: 'Making Friends',
+          description: 'Follow 5 users',
+          rarity: 'common',
+          unlockedAt: following.length >= 5 ? new Date() : null,
+          progress: following.length,
+          maxProgress: 5,
         },
         {
           id: 'social_butterfly',
           title: 'Social Butterfly',
-          description: 'Follow 100 users',
+          description: 'Follow 25 users',
           rarity: 'rare',
-          progress: 25,
+          unlockedAt: following.length >= 25 ? new Date() : null,
+          progress: following.length,
+          maxProgress: 25,
+        },
+        {
+          id: 'popular',
+          title: 'Popular Gamer',
+          description: 'Gain 10 followers',
+          rarity: 'rare',
+          unlockedAt: followers.length >= 10 ? new Date() : null,
+          progress: followers.length,
+          maxProgress: 10,
+        },
+        {
+          id: 'influencer',
+          title: 'Gaming Influencer',
+          description: 'Gain 50 followers',
+          rarity: 'epic',
+          unlockedAt: followers.length >= 50 ? new Date() : null,
+          progress: followers.length,
+          maxProgress: 50,
+        },
+        {
+          id: 'profile_complete',
+          title: 'Profile Master',
+          description: 'Complete your profile 100%',
+          rarity: 'rare',
+          unlockedAt: currentUser?.bio && currentUser?.location && currentUser?.website && 
+                      currentUser?.favoriteGames?.length >= 3 && currentUser?.socialLinks?.length > 0 ? 
+                      new Date() : null,
+          progress: calculateProfileCompletion(currentUser),
           maxProgress: 100,
+        },
+        {
+          id: 'xp_collector',
+          title: 'XP Collector',
+          description: 'Earn 1000 XP',
+          rarity: 'rare',
+          unlockedAt: (currentUser?.xp || 0) >= 1000 ? new Date() : null,
+          progress: currentUser?.xp || 0,
+          maxProgress: 1000,
         },
       ];
       
-      res.json(achievements);
+      res.json(userAchievements);
     } catch (error) {
       console.error("Error fetching user achievements:", error);
       res.status(500).json({ message: "Failed to fetch achievements" });

@@ -280,6 +280,39 @@ export default function ProfileNew() {
     return <LoadingPage text="Loading user data..." />;
   }
 
+  // Enhanced leveling calculation
+  const calculateLevel = (xp: number): number => {
+    let level = 1;
+    let requiredXP = 0;
+    
+    while (xp >= requiredXP) {
+      level++;
+      requiredXP += level * 50;
+    }
+    
+    return level - 1;
+  };
+
+  const getXPForLevel = (level: number): number => {
+    let totalXP = 0;
+    for (let i = 2; i <= level; i++) {
+      totalXP += i * 50;
+    }
+    return totalXP;
+  };
+
+  const getNextLevelXP = (level: number): number => {
+    return getXPForLevel(level + 1);
+  };
+
+  // Calculate level properly
+  const currentXP = statsData?.xp || profileUser?.xp || 0;
+  const currentLevel = calculateLevel(currentXP);
+  const currentLevelXP = getXPForLevel(currentLevel);
+  const nextLevelXP = getXPForLevel(currentLevel + 1);
+  const levelProgress = nextLevelXP > currentLevelXP ? 
+    ((currentXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100 : 100;
+
   const displayUser = profileUser || user;
   const displayStats = {
     level: currentLevel,
@@ -563,7 +596,7 @@ export default function ProfileNew() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gaming-text-dim">Level Progress</span>
                         <span className="text-gaming-blue font-mono">
-                          Level {displayStats.level} ({displayStats.xp?.toLocaleString() || '0'} XP)
+                          Level {displayStats.level} ({displayStats.xp.toLocaleString()} XP)
                         </span>
                       </div>
                       <Progress 

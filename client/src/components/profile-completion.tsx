@@ -67,7 +67,7 @@ export default function ProfileCompletion({ user, onEditProfile }: ProfileComple
       id: 'social_connections',
       label: 'Follow Others',
       icon: Users,
-      completed: !!(user?.followingCount && user.followingCount >= 5),
+      completed: false, // Mock for now - would check if user has followers/following
       points: 10,
     },
   ];
