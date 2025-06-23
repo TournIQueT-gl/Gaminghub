@@ -3,7 +3,11 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 
-export default function Sidebar() {
+interface SidebarProps {
+  onItemClick?: () => void;
+}
+
+export default function Sidebar({ onItemClick }: SidebarProps) {
   const [location] = useLocation();
   const { user, isAuthenticated, login } = useAuth();
 
@@ -27,20 +31,22 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="w-64 bg-gaming-darker border-r border-gaming-card flex flex-col fixed h-full z-10">
+    <div className="w-full h-full bg-gaming-darker flex flex-col">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-gaming-card">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 gaming-gradient rounded-lg flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM4 7h16v11H4zm1-3h2l1 2H4zm12 0h2l1 2h-3z"/>
-            </svg>
+      <div className="p-4 md:p-6 border-b border-gaming-card">
+        <Link href="/" onClick={onItemClick}>
+          <div className="flex items-center space-x-3 group">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-gaming-blue to-gaming-purple rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM4 7h16v11H4zm1-3h2l1 2H4zm12 0h2l1 2h-3z"/>
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-lg md:text-xl font-bold text-white">GamingX</h1>
+              <p className="text-xs text-gaming-text-dim">Pro Gaming Social</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">GamingX</h1>
-            <p className="text-xs text-gaming-text-dim">Pro Gaming Social</p>
-          </div>
-        </div>
+        </Link>
       </div>
 
       {/* User Profile Section */}
