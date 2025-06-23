@@ -112,15 +112,35 @@ export const tournaments = pgTable("tournaments", {
   name: varchar("name").notNull(),
   description: text("description"),
   game: varchar("game").notNull(),
-  format: varchar("format").notNull(), // "solo" or "team"
+  format: varchar("format").notNull(), // "solo", "team", "clan"
+  type: varchar("type").notNull(), // "single-elimination", "double-elimination", "round-robin", "swiss"
   maxParticipants: integer("max_participants").notNull(),
   currentParticipants: integer("current_participants").default(0),
+  teamSize: integer("team_size").default(1), // for team tournaments
   prizePool: decimal("prize_pool"),
-  status: varchar("status").default("registering"), // registering, active, completed
+  entryFee: decimal("entry_fee").default('0'),
+  region: varchar("region"),
+  skill_level: varchar("skill_level"), // "beginner", "intermediate", "advanced", "professional"
+  rules: jsonb("rules"),
+  requirements: jsonb("requirements"), // level, rank, etc.
+  bannerUrl: varchar("banner_url"),
+  status: varchar("status").default("registering"), // registering, active, completed, cancelled
+  registrationStart: timestamp("registration_start"),
+  registrationEnd: timestamp("registration_end"),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
+  actualStartDate: timestamp("actual_start_date"),
+  actualEndDate: timestamp("actual_end_date"),
+  winnerId: integer("winner_id"),
+  runnerUpId: integer("runner_up_id"),
+  thirdPlaceId: integer("third_place_id"),
+  isPublic: boolean("is_public").default(true),
+  isFeatured: boolean("is_featured").default(false),
+  totalRounds: integer("total_rounds"),
+  currentRound: integer("current_round").default(0),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Tournament participants table

@@ -20,7 +20,11 @@ import type {
   Tournament,
   InsertTournament,
   TournamentParticipant,
+  InsertTournamentParticipant,
   TournamentMatch,
+  InsertTournamentMatch,
+  TournamentBracket,
+  TournamentPrize,
   ChatRoom,
   ChatMessage,
   InsertChatMessage,
@@ -45,6 +49,8 @@ export class MemoryStorage implements IStorage {
   private tournaments = new Map<number, Tournament>();
   private tournamentParticipants = new Map<number, TournamentParticipant>();
   private tournamentMatches = new Map<number, TournamentMatch>();
+  private tournamentBrackets = new Map<number, TournamentBracket>();
+  private tournamentPrizes = new Map<number, TournamentPrize>();
   private chatRooms = new Map<number, ChatRoom>();
   private chatMessages = new Map<number, ChatMessage>();
   private chatRoomMemberships = new Map<number, ChatRoomMembership>();
@@ -63,6 +69,8 @@ export class MemoryStorage implements IStorage {
   private tournamentIdCounter = 1;
   private participantIdCounter = 1;
   private matchIdCounter = 1;
+  private bracketIdCounter = 1;
+  private prizeIdCounter = 1;
   private roomIdCounter = 1;
   private messageIdCounter = 1;
   private notificationIdCounter = 1;

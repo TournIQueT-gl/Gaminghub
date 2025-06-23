@@ -111,12 +111,46 @@ export interface IStorage {
   
   // Tournament operations
   createTournament(tournament: InsertTournament): Promise<Tournament>;
-  getTournaments(): Promise<Tournament[]>;
-  getTournamentById(id: number): Promise<Tournament | undefined>;
-  joinTournament(tournamentId: number, userId: string, clanId?: number): Promise<TournamentParticipant>;
-  getTournamentParticipants(tournamentId: number): Promise<TournamentParticipant[]>;
-  createTournamentMatch(match: Omit<TournamentMatch, 'id'>): Promise<TournamentMatch>;
-  updateMatchResult(matchId: number, winnerId: number, score: any): Promise<void>;
+  getTournaments(filters?: {
+    status?: string;
+    game?: string;
+    format?: string;
+    region?: string;
+    search?: string;
+    featured?: boolean;
+  }): Promise<(Tournament & { participantCount: number; isRegistered?: boolean })[]>;
+  getTournamentById(id: number, userId?: string): Promise<(Tournament & {
+    participants: (TournamentParticipant & { user?: User; clan?: Clan })[];
+    matches: TournamentMatch[];
+    currentUserParticipation?: TournamentParticipant;
+    isCreator?: boolean;
+    canManage?: boolean;
+  }) | undefined>;
+  updateTournament(tournamentId: number, updates: Partial<Tournament>, userId: string): Promise<Tournament>;
+  deleteTournament(tournamentId: number, userId: string): Promise<void>;
+  
+  // Tournament participation
+  joinTournament(tournamentId: number, userId: string, teamData?: { clanId?: number; teamName?: string; teamMembers?: string[] }): Promise<TournamentParticipant>;
+  leaveTournament(tournamentId: number, userId: string): Promise<void>;
+  getTournamentParticipants(tournamentId: number): Promise<(TournamentParticipant & { user?: User; clan?: Clan })[]>;
+  updateParticipantStatus(participantId: number, status: string, placement?: number): Promise<void>;
+  
+  // Tournament matches
+  createTournamentMatch(match: InsertTournamentMatch): Promise<TournamentMatch>;
+  getTournamentMatches(tournamentId: number, round?: number): Promise<(TournamentMatch & {
+    participant1?: TournamentParticipant & { user?: User; clan?: Clan };
+    participant2?: TournamentParticipant & { user?: User; clan?: Clan };
+    winner?: TournamentParticipant & { user?: User; clan?: Clan };
+  })[]>;
+  updateMatchResult(matchId: number, winnerId: number, loserId: number, score: any, gameResults?: any): Promise<void>;
+  generateTournamentBracket(tournamentId: number): Promise<void>;
+  advanceTournamentRound(tournamentId: number): Promise<void>;
+  
+  // Tournament management
+  startTournament(tournamentId: number, userId: string): Promise<void>;
+  completeTournament(tournamentId: number, userId: string): Promise<void>;
+  cancelTournament(tournamentId: number, userId: string, reason: string): Promise<void>;
+  distributePrizes(tournamentId: number, userId: string): Promise<void>;
   
   // Chat operations
   createChatRoom(room: InsertChatRoom): Promise<ChatRoom>;
