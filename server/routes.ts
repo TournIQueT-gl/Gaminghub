@@ -139,6 +139,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(400).json({ message: "User ID is required" });
       }
+
+      // Basic validation
+      if (updateData.username && (updateData.username.length < 3 || updateData.username.length > 20)) {
+        return res.status(400).json({ message: "Username must be between 3 and 20 characters" });
+      }
+
+      if (updateData.bio && updateData.bio.length > 500) {
+        return res.status(400).json({ message: "Bio must be less than 500 characters" });
+      }
+
+      if (updateData.website && updateData.website.length > 0) {
+        try {
+          new URL(updateData.website);
+        } catch {
+          return res.status(400).json({ message: "Please enter a valid website URL" });
+        }
+      }
+
+      if (updateData.favoriteGames && updateData.favoriteGames.length > 10) {
+        return res.status(400).json({ message: "You can only have up to 10 favorite games" });
+      }
       
       // Get current user
       let currentUser = await storage.getUser(userId);
@@ -157,6 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.upsertUser({
         id: userId,
         ...updateData,
+        updatedAt: new Date(),
       });
       
       res.json(updatedUser);
@@ -324,6 +346,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating social links:", error);
       res.status(500).json({ message: "Failed to update social links" });
+    }
+  });
+
+  // Get detailed user statistics
+  app.get('/api/users/:id/detailed-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Mock detailed stats - in a real app, this would come from analytics database
+      const mockDetailedStats = {
+        totalViews: 2847,
+        totalLikes: 127,
+        totalComments: 45,
+        winRate: 67,
+        hoursPlayed: 245,
+        gamesPlayed: 3,
+        streakDays: 7,
+        rankPosition: 1247,
+        monthlyGrowth: 12.5,
+        engagementRate: 76,
+      };
+      
+      res.json(mockDetailedStats);
+    } catch (error) {
+      console.error("Error fetching detailed stats:", error);
+      res.status(500).json({ message: "Failed to fetch detailed stats" });
+    }
+  });
+
+  // Get user followers
+  app.get('/api/users/:id/followers', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Mock followers data
+      const mockFollowers = [
+        {
+          id: "user1",
+          username: "GamerPro123",
+          email: "gamer@example.com",
+          profileImageUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face",
+          isVerified: true,
+          level: 25,
+          followersCount: 1540,
+          isFollowing: false
+        },
+        {
+          id: "user2", 
+          username: "EsportsLegend",
+          email: "legend@example.com",
+          profileImageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+          isVerified: true,
+          level: 42,
+          followersCount: 8920,
+          isFollowing: true
+        }
+      ];
+      
+      res.json(mockFollowers);
+    } catch (error) {
+      console.error("Error fetching followers:", error);
+      res.status(500).json({ message: "Failed to fetch followers" });
+    }
+  });
+
+  // Get user following
+  app.get('/api/users/:id/following', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Mock following data
+      const mockFollowing = [
+        {
+          id: "user3",
+          username: "StreamQueen",
+          email: "queen@example.com",
+          profileImageUrl: "https://images.unsplash.com/photo-1494790108755-2616b6fa9e16?w=100&h=100&fit=crop&crop=face",
+          level: 18,
+          followersCount: 3200,
+          isFollowing: true
+        }
+      ];
+      
+      res.json(mockFollowing);
+    } catch (error) {
+      console.error("Error fetching following:", error);
+      res.status(500).json({ message: "Failed to fetch following" });
+    }
+  });
+
+  // Get user activity feed
+  app.get('/api/users/:id/activity', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Mock activity data
+      const mockActivities = [
+        {
+          id: '1',
+          type: 'achievement',
+          title: 'New Achievement Unlocked!',
+          description: 'Earned "First Victory" achievement',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          metadata: { achievement: 'First Victory', rarity: 'common' }
+        },
+        {
+          id: '2',
+          type: 'level_up',
+          title: 'Level Up!',
+          description: 'Reached level 15',
+          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+          metadata: { level: 15, xp: 1500 }
+        }
+      ];
+      
+      res.json(mockActivities);
+    } catch (error) {
+      console.error("Error fetching activity:", error);
+      res.status(500).json({ message: "Failed to fetch activity" });
     }
   });
 

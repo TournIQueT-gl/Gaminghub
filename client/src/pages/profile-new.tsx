@@ -14,6 +14,10 @@ import ProfileSocialLinks from "@/components/profile-social-links";
 import ProfileActivityFeed from "@/components/profile-activity-feed";
 import ProfileStatsDashboard from "@/components/profile-stats-dashboard";
 import ProfileFollowersModal from "@/components/profile-followers-modal";
+import ProfileBadges from "@/components/profile-badges";
+import ProfileQuickActions from "@/components/profile-quick-actions";
+import { ProfileErrorBoundary } from "@/components/profile-error-boundary";
+import { useProfileValidation } from "@/hooks/useProfileValidation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -83,6 +87,7 @@ export default function ProfileNew() {
   const targetUserId = params.userId || null;
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { validateProfile, getFieldError, clearFieldError } = useProfileValidation();
   
   const profileUserId = targetUserId || user?.id;
   const isOwnProfile = !targetUserId || targetUserId === user?.id;
@@ -259,7 +264,24 @@ export default function ProfileNew() {
   const nextLevelXP = displayStats.level * 1000;
   const levelProgress = ((displayStats.xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
+    const isValid = await validateProfile({
+      username: profileData.username,
+      bio: profileData.bio,
+      location: profileData.location,
+      website: profileData.website,
+      favoriteGames: profileData.favoriteGames,
+    });
+
+    if (!isValid) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before saving",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateProfileMutation.mutate({
       username: profileData.username,
       bio: profileData.bio,
@@ -497,9 +519,17 @@ export default function ProfileNew() {
                           <Input
                             id="username"
                             value={profileData.username}
-                            onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value }))}
-                            className="bg-gaming-darker border-gaming-card-hover text-white mt-1"
+                            onChange={(e) => {
+                              setProfileData(prev => ({ ...prev, username: e.target.value }));
+                              clearFieldError('username');
+                            }}
+                            className={`bg-gaming-darker border-gaming-card-hover text-white mt-1 ${
+                              getFieldError('username') ? 'border-red-500' : ''
+                            }`}
                           />
+                          {getFieldError('username') && (
+                            <p className="text-red-400 text-xs mt-1">{getFieldError('username')}</p>
+                          )}
                         </div>
                         <div>
                           <Label htmlFor="location" className="text-white">Location</Label>
@@ -516,10 +546,18 @@ export default function ProfileNew() {
                           <Input
                             id="website"
                             value={profileData.website}
-                            onChange={(e) => setProfileData(prev => ({ ...prev, website: e.target.value }))}
-                            className="bg-gaming-darker border-gaming-card-hover text-white mt-1"
+                            onChange={(e) => {
+                              setProfileData(prev => ({ ...prev, website: e.target.value }));
+                              clearFieldError('website');
+                            }}
+                            className={`bg-gaming-darker border-gaming-card-hover text-white mt-1 ${
+                              getFieldError('website') ? 'border-red-500' : ''
+                            }`}
                             placeholder="https://your-website.com"
                           />
+                          {getFieldError('website') && (
+                            <p className="text-red-400 text-xs mt-1">{getFieldError('website')}</p>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-4">
@@ -528,10 +566,18 @@ export default function ProfileNew() {
                           <Textarea
                             id="bio"
                             value={profileData.bio}
-                            onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                            className="bg-gaming-darker border-gaming-card-hover text-white mt-1 min-h-[100px]"
+                            onChange={(e) => {
+                              setProfileData(prev => ({ ...prev, bio: e.target.value }));
+                              clearFieldError('bio');
+                            }}
+                            className={`bg-gaming-darker border-gaming-card-hover text-white mt-1 min-h-[100px] ${
+                              getFieldError('bio') ? 'border-red-500' : ''
+                            }`}
                             placeholder="Tell the gaming community about yourself..."
                           />
+                          {getFieldError('bio') && (
+                            <p className="text-red-400 text-xs mt-1">{getFieldError('bio')}</p>
+                          )}
                         </div>
                         <div>
                           <Label className="text-white">Favorite Games</Label>
@@ -594,10 +640,12 @@ export default function ProfileNew() {
 
             {/* Profile Completion - Only show for own profile */}
             {isOwnProfile && (
-              <ProfileCompletion 
-                user={displayUser} 
-                onEditProfile={() => setEditMode(true)} 
-              />
+              <ProfileErrorBoundary>
+                <ProfileCompletion 
+                  user={displayUser} 
+                  onEditProfile={() => setEditMode(true)} 
+                />
+              </ProfileErrorBoundary>
             )}
 
             {/* Clan Membership */}
@@ -632,18 +680,29 @@ export default function ProfileNew() {
             )}
 
             {/* Social Links */}
-            <ProfileSocialLinks 
+            <ProfileErrorBoundary>
+              <ProfileSocialLinks 
+                userId={profileUserId!}
+                socialLinks={displayUser?.socialLinks || []}
+                editable={isOwnProfile}
+              />
+            </ProfileErrorBoundary>
+
+            {/* Quick Actions */}
+            <ProfileQuickActions
               userId={profileUserId!}
-              socialLinks={displayUser?.socialLinks || []}
-              editable={isOwnProfile}
+              username={displayUser?.username || 'User'}
+              isOwnProfile={isOwnProfile}
             />
 
             {/* Enhanced Stats Dashboard */}
-            <ProfileStatsDashboard 
-              userId={profileUserId!}
-              userStats={displayStats}
-              isOwnProfile={isOwnProfile}
-            />
+            <ProfileErrorBoundary>
+              <ProfileStatsDashboard 
+                userId={profileUserId!}
+                userStats={displayStats}
+                isOwnProfile={isOwnProfile}
+              />
+            </ProfileErrorBoundary>
 
             {/* Profile Settings Modal */}
             {isOwnProfile && (
@@ -687,6 +746,10 @@ export default function ProfileNew() {
                     Analytics
                   </TabsTrigger>
                 )}
+                <TabsTrigger value="badges" className="data-[state=active]:bg-gaming-card">
+                  <Award className="w-4 h-4 mr-2" />
+                  Badges
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="posts" className="space-y-4">
@@ -774,6 +837,10 @@ export default function ProfileNew() {
                   )}
                 </TabsContent>
               )}
+
+              <TabsContent value="badges" className="space-y-4">
+                <ProfileBadges userId={profileUserId!} isOwnProfile={isOwnProfile} />
+              </TabsContent>
             </Tabs>
           </div>
         </div>

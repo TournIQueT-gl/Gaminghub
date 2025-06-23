@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { validateImageFile, compressImage } from "@/utils/profileUtils";
 
 interface ProfileAvatarUploadProps {
   currentImage?: string;
@@ -26,21 +27,12 @@ export default function ProfileAvatarUpload({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB",
+        title: "Invalid file",
+        description: validation.error,
         variant: "destructive",
       });
       return;
@@ -49,26 +41,19 @@ export default function ProfileAvatarUpload({
     setUploading(true);
     
     try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setPreviewImage(result);
-        
-        // For demo purposes, we'll use the preview as the final image
-        // In a real app, you'd upload to a service like AWS S3, Cloudinary, etc.
-        onImageUpdate?.(result);
-        
-        toast({
-          title: "Profile image updated",
-          description: "Your profile picture has been updated successfully",
-        });
-      };
-      reader.readAsDataURL(file);
+      // Compress image
+      const compressedDataUrl = await compressImage(file);
+      setPreviewImage(compressedDataUrl);
+      onImageUpdate?.(compressedDataUrl);
+      
+      toast({
+        title: "Profile image updated",
+        description: "Your profile picture has been updated successfully",
+      });
     } catch (error) {
       toast({
         title: "Upload failed",
-        description: "Failed to upload image. Please try again.",
+        description: "Failed to process image. Please try again.",
         variant: "destructive",
       });
     } finally {

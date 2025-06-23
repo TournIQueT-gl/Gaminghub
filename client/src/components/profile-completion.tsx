@@ -24,7 +24,7 @@ export default function ProfileCompletion({ user, onEditProfile }: ProfileComple
       id: 'profile_picture',
       label: 'Profile Picture',
       icon: Camera,
-      completed: !!user?.profileImage,
+      completed: !!(user?.profileImageUrl || user?.profileImage),
       points: 15,
     },
     {
@@ -71,8 +71,20 @@ export default function ProfileCompletion({ user, onEditProfile }: ProfileComple
 
   const completionLevel = getCompletionLevel(completionPercentage);
 
-  if (completionPercentage >= 100) {
-    return null; // Hide when profile is complete
+  if (completionPercentage >= 90) {
+    return (
+      <Card className="bg-gaming-emerald/10 border-gaming-emerald">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center gap-3">
+            <CheckCircle className="w-6 h-6 text-gaming-emerald" />
+            <div>
+              <h3 className="text-white font-semibold">Profile Complete!</h3>
+              <p className="text-gaming-emerald text-sm">Your gaming profile is looking great</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
