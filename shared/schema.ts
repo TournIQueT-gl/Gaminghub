@@ -345,7 +345,7 @@ export const contentPieces = pgTable("content_pieces", {
   game: varchar("game"),
   tags: text("tags").array(), // array of tags
   duration: integer("duration"), // for videos, in seconds
-  fileSize: bigint("file_size", { mode: "number" }), // in bytes
+  fileSize: integer("file_size"), // in bytes
   resolution: varchar("resolution"), // "1080p", "720p", etc.
   fps: integer("fps"), // frames per second for videos
   status: varchar("status").default("published"), // "draft", "processing", "published", "archived"
@@ -761,6 +761,32 @@ export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions
   lastUsed: true,
 });
 
+export const insertStreamSchema = createInsertSchema(streams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewerCount: true,
+  maxViewers: true,
+  totalViews: true,
+  peakViewers: true,
+});
+
+export const insertStreamFollowSchema = createInsertSchema(streamFollows).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertStreamChatSchema = createInsertSchema(streamChats).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContentPieceSchema = createInsertSchema(contentPieces).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -792,6 +818,20 @@ export type InsertNotificationSettings = z.infer<typeof insertNotificationSettin
 export type NotificationSettings = typeof notificationSettings.$inferSelect;
 export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertStream = z.infer<typeof insertStreamSchema>;
+export type Stream = typeof streams.$inferSelect;
+export type InsertStreamFollow = z.infer<typeof insertStreamFollowSchema>;
+export type StreamFollow = typeof streamFollows.$inferSelect;
+export type InsertStreamChat = z.infer<typeof insertStreamChatSchema>;
+export type StreamChat = typeof streamChats.$inferSelect;
+export type StreamModerator = typeof streamModerators.$inferSelect;
+export type StreamHighlight = typeof streamHighlights.$inferSelect;
+export type StreamDonation = typeof streamDonations.$inferSelect;
+export type InsertContentPiece = z.infer<typeof insertContentPieceSchema>;
+export type ContentPiece = typeof contentPieces.$inferSelect;
+export type ContentCategory = typeof contentCategories.$inferSelect;
+export type ContentLike = typeof contentLikes.$inferSelect;
+export type ContentView = typeof contentViews.$inferSelect;
 export type ClanMembership = typeof clanMemberships.$inferSelect;
 export type TournamentParticipant = typeof tournamentParticipants.$inferSelect;
 export type TournamentMatch = typeof tournamentMatches.$inferSelect;

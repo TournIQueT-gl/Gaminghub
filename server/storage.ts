@@ -17,6 +17,9 @@ import {
   type UpsertUser,
   type InsertPost,
   type Post,
+  type Stream,
+  type StreamChat,
+  type ContentPiece,
   type InsertComment,
   type Comment,
   type InsertClan,
@@ -33,6 +36,9 @@ import {
   type Notification,
   type Like,
   type Follow,
+  type InsertStream,
+  type InsertStreamChat,
+  type InsertContentPiece,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, count, inArray } from "drizzle-orm";
@@ -211,6 +217,80 @@ export interface IStorage {
     badge?: string;
     data?: any;
   }): Promise<void>;
+
+  // Live streaming operations
+  createStream(stream: InsertStream): Promise<Stream>;
+  getStreams(filters?: {
+    status?: string;
+    category?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Stream[]>;
+  getStreamById(id: number): Promise<Stream | undefined>;
+  updateStream(id: number, updates: Partial<Stream>): Promise<Stream>;
+  deleteStream(id: number, userId: string): Promise<void>;
+  
+  // Stream follows
+  followStream(followerId: string, streamerId: string): Promise<StreamFollow>;
+  unfollowStream(followerId: string, streamerId: string): Promise<void>;
+  getStreamFollowers(streamerId: string): Promise<StreamFollow[]>;
+  getUserStreamFollows(userId: string): Promise<StreamFollow[]>;
+  
+  // Stream chat
+  sendStreamMessage(message: InsertStreamChat): Promise<StreamChat>;
+  getStreamMessages(streamId: number, limit?: number): Promise<(StreamChat & { user: User })[]>;
+  deleteStreamMessage(messageId: number, userId: string): Promise<void>;
+  
+  // Content operations
+  createContent(content: InsertContentPiece): Promise<ContentPiece>;
+  getContent(filters?: {
+    type?: string;
+    creatorId?: string;
+    status?: string;
+    visibility?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ContentPiece[]>;
+  getContentById(id: number): Promise<ContentPiece | undefined>;
+  updateContent(id: number, updates: Partial<ContentPiece>, userId: string): Promise<ContentPiece>;
+  deleteContent(id: number, userId: string): Promise<void>;
+  
+  // Content interactions
+  likeContent(contentId: number, userId: string): Promise<void>;
+  unlikeContent(contentId: number, userId: string): Promise<void>;
+  recordContentView(contentId: number, userId?: string, watchTime?: number): Promise<void>;
+
+  // Live streaming operations
+  createStream(stream: InsertStream): Promise<Stream>;
+  getStreams(filters?: { status?: string; category?: string; limit?: number }): Promise<Stream[]>;
+  getStreamById(id: number): Promise<Stream | undefined>;
+  getStreamByStreamerId(streamerId: string): Promise<Stream | undefined>;
+  updateStream(id: number, updates: Partial<Stream>): Promise<Stream>;
+  deleteStream(id: number, streamerId: string): Promise<void>;
+  startStream(streamId: number): Promise<void>;
+  endStream(streamId: number): Promise<void>;
+  updateViewerCount(streamId: number, count: number): Promise<void>;
+
+  // Stream chat operations
+  sendStreamChat(chat: InsertStreamChat): Promise<StreamChat>;
+  getStreamChats(streamId: number, limit?: number): Promise<StreamChat[]>;
+  deleteStreamChat(chatId: number, userId: string): Promise<void>;
+  moderateStreamChat(chatId: number, moderatorId: string): Promise<void>;
+
+  // Content creation operations
+  createContent(content: InsertContentPiece): Promise<ContentPiece>;
+  getContent(filters?: { 
+    type?: string; 
+    game?: string; 
+    creatorId?: string; 
+    status?: string; 
+    limit?: number; 
+    offset?: number;
+  }): Promise<ContentPiece[]>;
+  getContentById(id: number): Promise<ContentPiece | undefined>;
+  updateContent(id: number, updates: Partial<ContentPiece>, creatorId: string): Promise<ContentPiece>;
+  deleteContent(id: number, creatorId: string): Promise<void>;
+  incrementContentViews(id: number, userId?: string): Promise<void>;
   
   // Follow operations
   followUser(followerId: string, followingId: string): Promise<Follow>;

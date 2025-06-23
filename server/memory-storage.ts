@@ -71,6 +71,10 @@ export class MemoryStorage implements IStorage {
   private gameLibrarySyncs = new Map<number, GameLibrarySync>();
   private notificationSettings = new Map<string, NotificationSettings[]>(); // key: userId
   private pushSubscriptions = new Map<number, PushSubscription>();
+  private streams = new Map<number, Stream>();
+  private streamFollows = new Map<number, StreamFollow>();
+  private streamChats = new Map<number, StreamChat>();
+  private contentPieces = new Map<number, ContentPiece>();
 
   private postIdCounter = 1;
   private commentIdCounter = 1;
@@ -102,6 +106,10 @@ export class MemoryStorage implements IStorage {
   private gameLibrarySyncIdCounter = 1;
   private pushSubscriptionIdCounter = 1;
   private chatRoomMembershipIdCounter = 1;
+  private streamIdCounter = 1;
+  private streamFollowIdCounter = 1;
+  private streamChatIdCounter = 1;
+  private contentPieceIdCounter = 1;
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
@@ -1401,5 +1409,242 @@ export class MemoryStorage implements IStorage {
         sub.lastUsed = new Date();
       });
     }
+  }
+
+  // Live streaming operations
+  async createStream(stream: InsertStream): Promise<Stream> {
+    const newStream: Stream = {
+      id: this.streamIdCounter++,
+      ...stream,
+      streamKey: `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'offline',
+      viewerCount: 0,
+      maxViewers: 0,
+      totalViews: 0,
+      peakViewers: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.streams.set(newStream.id, newStream);
+    return newStream;
+  }
+
+  async getStreams(filters?: {
+    status?: string;
+    category?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Stream[]> {
+    let streams = Array.from(this.streams.values());
+
+    if (filters) {
+      if (filters.status) {
+        streams = streams.filter(stream => stream.status === filters.status);
+      }
+      if (filters.category) {
+        streams = streams.filter(stream => stream.category === filters.category);
+      }
+    }
+
+    streams.sort((a, b) => {
+      if (a.status === 'live' && b.status !== 'live') return -1;
+      if (b.status === 'live' && a.status !== 'live') return 1;
+      return b.viewerCount - a.viewerCount;
+    });
+
+    const limit = filters?.limit || 50;
+    const offset = filters?.offset || 0;
+    return streams.slice(offset, offset + limit);
+  }
+
+  async getStreamById(id: number): Promise<Stream | undefined> {
+    return this.streams.get(id);
+  }
+
+  async updateStream(id: number, updates: Partial<Stream>): Promise<Stream> {
+    const stream = this.streams.get(id);
+    if (!stream) throw new Error('Stream not found');
+
+    const updatedStream = { ...stream, ...updates, updatedAt: new Date() };
+    this.streams.set(id, updatedStream);
+    return updatedStream;
+  }
+
+  async deleteStream(id: number, userId: string): Promise<void> {
+    const stream = this.streams.get(id);
+    if (!stream) throw new Error('Stream not found');
+    if (stream.streamerId !== userId) throw new Error('Permission denied');
+
+    this.streams.delete(id);
+  }
+
+  // Stream follows
+  async followStream(followerId: string, streamerId: string): Promise<StreamFollow> {
+    // Check if already following
+    const existing = Array.from(this.streamFollows.values())
+      .find(follow => follow.followerId === followerId && follow.streamerId === streamerId);
+    
+    if (existing) {
+      throw new Error('Already following this streamer');
+    }
+
+    const follow: StreamFollow = {
+      id: this.streamFollowIdCounter++,
+      followerId,
+      streamerId,
+      notifyOnLive: true,
+      createdAt: new Date(),
+    };
+    this.streamFollows.set(follow.id, follow);
+    return follow;
+  }
+
+  async unfollowStream(followerId: string, streamerId: string): Promise<void> {
+    const follow = Array.from(this.streamFollows.values())
+      .find(f => f.followerId === followerId && f.streamerId === streamerId);
+    
+    if (follow) {
+      this.streamFollows.delete(follow.id);
+    }
+  }
+
+  async getStreamFollowers(streamerId: string): Promise<StreamFollow[]> {
+    return Array.from(this.streamFollows.values())
+      .filter(follow => follow.streamerId === streamerId);
+  }
+
+  async getUserStreamFollows(userId: string): Promise<StreamFollow[]> {
+    return Array.from(this.streamFollows.values())
+      .filter(follow => follow.followerId === userId);
+  }
+
+  // Stream chat
+  async sendStreamMessage(message: InsertStreamChat): Promise<StreamChat> {
+    const newMessage: StreamChat = {
+      id: this.streamChatIdCounter++,
+      ...message,
+      isDeleted: false,
+      isModerated: false,
+      moderatedBy: null,
+      moderatedAt: null,
+      createdAt: new Date(),
+    };
+    this.streamChats.set(newMessage.id, newMessage);
+    return newMessage;
+  }
+
+  async getStreamMessages(streamId: number, limit = 100): Promise<(StreamChat & { user: User })[]> {
+    const messages = Array.from(this.streamChats.values())
+      .filter(message => message.streamId === streamId && !message.isDeleted)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .slice(-limit);
+
+    return messages.map(message => ({
+      ...message,
+      user: this.users.get(message.userId)!,
+    })).filter(m => m.user);
+  }
+
+  async deleteStreamMessage(messageId: number, userId: string): Promise<void> {
+    const message = this.streamChats.get(messageId);
+    if (!message) throw new Error('Message not found');
+    if (message.userId !== userId) throw new Error('Permission denied');
+
+    message.isDeleted = true;
+  }
+
+  // Content operations
+  async createContent(content: InsertContentPiece): Promise<ContentPiece> {
+    const newContent: ContentPiece = {
+      id: this.contentPieceIdCounter++,
+      ...content,
+      status: content.status || 'published',
+      visibility: content.visibility || 'public',
+      isFeatured: false,
+      viewCount: 0,
+      likeCount: 0,
+      downloadCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.contentPieces.set(newContent.id, newContent);
+    return newContent;
+  }
+
+  async getContent(filters?: {
+    type?: string;
+    creatorId?: string;
+    status?: string;
+    visibility?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ContentPiece[]> {
+    let content = Array.from(this.contentPieces.values());
+
+    if (filters) {
+      if (filters.type) {
+        content = content.filter(c => c.type === filters.type);
+      }
+      if (filters.creatorId) {
+        content = content.filter(c => c.creatorId === filters.creatorId);
+      }
+      if (filters.status) {
+        content = content.filter(c => c.status === filters.status);
+      }
+      if (filters.visibility) {
+        content = content.filter(c => c.visibility === filters.visibility);
+      }
+    }
+
+    content.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    const limit = filters?.limit || 50;
+    const offset = filters?.offset || 0;
+    return content.slice(offset, offset + limit);
+  }
+
+  async getContentById(id: number): Promise<ContentPiece | undefined> {
+    return this.contentPieces.get(id);
+  }
+
+  async updateContent(id: number, updates: Partial<ContentPiece>, userId: string): Promise<ContentPiece> {
+    const content = this.contentPieces.get(id);
+    if (!content) throw new Error('Content not found');
+    if (content.creatorId !== userId) throw new Error('Permission denied');
+
+    const updatedContent = { ...content, ...updates, updatedAt: new Date() };
+    this.contentPieces.set(id, updatedContent);
+    return updatedContent;
+  }
+
+  async deleteContent(id: number, userId: string): Promise<void> {
+    const content = this.contentPieces.get(id);
+    if (!content) throw new Error('Content not found');
+    if (content.creatorId !== userId) throw new Error('Permission denied');
+
+    this.contentPieces.delete(id);
+  }
+
+  // Content interactions
+  async likeContent(contentId: number, userId: string): Promise<void> {
+    const content = this.contentPieces.get(contentId);
+    if (!content) throw new Error('Content not found');
+
+    // Simple like tracking - in real implementation would use separate table
+    content.likeCount += 1;
+  }
+
+  async unlikeContent(contentId: number, userId: string): Promise<void> {
+    const content = this.contentPieces.get(contentId);
+    if (!content) throw new Error('Content not found');
+
+    content.likeCount = Math.max(0, content.likeCount - 1);
+  }
+
+  async recordContentView(contentId: number, userId?: string, watchTime?: number): Promise<void> {
+    const content = this.contentPieces.get(contentId);
+    if (!content) throw new Error('Content not found');
+
+    content.viewCount += 1;
   }
 }

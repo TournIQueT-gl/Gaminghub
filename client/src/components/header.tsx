@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
+import NotificationBell from "@/components/notifications/notification-bell";
 
 interface HeaderProps {
   title: string;
@@ -35,12 +36,7 @@ export default function Header({ title }: HeaderProps) {
           </div>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative p-2 rounded-lg hover:bg-gaming-card">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-gaming-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-              7
-            </span>
-          </Button>
+          <NotificationBell />
 
           {/* User Menu */}
           <DropdownMenu>

@@ -15,14 +15,24 @@ import ProfileNew from "@/pages/profile-new";
 import Settings from "@/pages/settings";
 import Discover from "@/pages/discover";
 import Gaming from "@/pages/gaming";
+import Content from "@/pages/content";
+import Streaming from "@/pages/streaming";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gaming-dark flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
         <>
@@ -33,6 +43,8 @@ function Router() {
           <Route path="/messages" component={Messages} />
           <Route path="/discover" component={Discover} />
           <Route path="/gaming" component={Gaming} />
+          <Route path="/content" component={Content} />
+          <Route path="/streaming" component={Streaming} />
           <Route path="/profile/:userId?" component={ProfileNew} />
           <Route path="/settings" component={Settings} />
         </>
