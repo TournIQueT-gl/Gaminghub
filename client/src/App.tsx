@@ -13,6 +13,8 @@ import ClanDetails from "@/pages/clan-details";
 import Messages from "@/pages/messages";
 import ProfileNew from "@/pages/profile-new";
 import Settings from "@/pages/settings";
+import Discover from "@/pages/discover";
+import Gaming from "@/pages/gaming";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -29,6 +31,8 @@ function Router() {
           <Route path="/clans" component={Clans} />
           <Route path="/clan/:id" component={ClanDetails} />
           <Route path="/messages" component={Messages} />
+          <Route path="/discover" component={Discover} />
+          <Route path="/gaming" component={Gaming} />
           <Route path="/profile/:userId?" component={ProfileNew} />
           <Route path="/settings" component={Settings} />
         </>

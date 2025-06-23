@@ -7,7 +7,7 @@ import { tournamentService } from "./services/tournaments";
 import { clanService } from "./services/clans";
 import { notificationService } from "./services/notifications";
 import { createWebSocketService } from "./services/websocket";
-import { insertPostSchema, insertCommentSchema, insertClanSchema, insertClanApplicationSchema, insertClanEventSchema, insertTournamentSchema, insertTournamentParticipantSchema, insertTournamentMatchSchema, insertChatRoomSchema, insertChatMessageSchema, insertUserSocialSchema, insertFriendRequestSchema, insertUserPreferencesSchema } from "@shared/schema";
+import { insertPostSchema, insertCommentSchema, insertClanSchema, insertClanApplicationSchema, insertClanEventSchema, insertTournamentSchema, insertTournamentParticipantSchema, insertTournamentMatchSchema, insertChatRoomSchema, insertChatMessageSchema, insertUserSocialSchema, insertFriendRequestSchema, insertUserPreferencesSchema, insertUserGameSchema, insertGameSessionSchema, insertGameAchievementSchema, insertGameReviewSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {

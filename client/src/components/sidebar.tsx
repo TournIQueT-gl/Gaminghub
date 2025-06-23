@@ -1,4 +1,4 @@
-import { Home, Trophy, Users, MessageCircle, User, Settings } from "lucide-react";
+import { Home, Trophy, Users, MessageCircle, User, Settings, Gamepad2, Compass } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";

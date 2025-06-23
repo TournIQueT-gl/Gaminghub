@@ -299,6 +299,133 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User game library
+export const userGames = pgTable("user_games", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  gameId: varchar("game_id").notNull(), // system game identifier
+  gameName: varchar("game_name").notNull(),
+  platform: varchar("platform").notNull(), // "pc", "xbox", "playstation", "nintendo", "mobile"
+  hoursPlayed: decimal("hours_played").default('0'),
+  lastPlayed: timestamp("last_played"),
+  isPlaying: boolean("is_playing").default(false),
+  isFavorite: boolean("is_favorite").default(false),
+  skillLevel: varchar("skill_level"), // "beginner", "intermediate", "advanced", "expert"
+  rank: varchar("rank"), // game-specific rank
+  accountId: varchar("account_id"), // external account ID for this game
+  isPublic: boolean("is_public").default(true),
+  addedAt: timestamp("added_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Game achievements
+export const gameAchievements = pgTable("game_achievements", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  gameId: varchar("game_id").notNull(),
+  achievementId: varchar("achievement_id").notNull(),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  iconUrl: varchar("icon_url"),
+  rarity: varchar("rarity").default("common"), // "common", "uncommon", "rare", "epic", "legendary"
+  points: integer("points").default(0),
+  progress: integer("progress").default(1),
+  maxProgress: integer("max_progress").default(1),
+  isSecret: boolean("is_secret").default(false),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+});
+
+// Game sessions
+export const gameSessions = pgTable("game_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  gameId: varchar("game_id").notNull(),
+  gameName: varchar("game_name").notNull(),
+  platform: varchar("platform").notNull(),
+  sessionStart: timestamp("session_start").notNull(),
+  sessionEnd: timestamp("session_end"),
+  duration: integer("duration"), // in minutes
+  score: integer("score"),
+  kills: integer("kills"),
+  deaths: integer("deaths"),
+  assists: integer("assists"),
+  wins: integer("wins").default(0),
+  losses: integer("losses").default(0),
+  xpGained: integer("xp_gained").default(0),
+  notes: text("notes"),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Game statistics
+export const gameStatistics = pgTable("game_statistics", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  gameId: varchar("game_id").notNull(),
+  gameName: varchar("game_name").notNull(),
+  totalHours: decimal("total_hours").default('0'),
+  totalSessions: integer("total_sessions").default(0),
+  totalKills: integer("total_kills").default(0),
+  totalDeaths: integer("total_deaths").default(0),
+  totalAssists: integer("total_assists").default(0),
+  totalWins: integer("total_wins").default(0),
+  totalLosses: integer("total_losses").default(0),
+  totalScore: integer("total_score").default(0),
+  averageScore: decimal("average_score").default('0'),
+  bestScore: integer("best_score").default(0),
+  killDeathRatio: decimal("kill_death_ratio").default('0'),
+  winRate: decimal("win_rate").default('0'),
+  currentStreak: integer("current_streak").default(0),
+  bestStreak: integer("best_streak").default(0),
+  lastPlayed: timestamp("last_played"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Game leaderboards
+export const gameLeaderboards = pgTable("game_leaderboards", {
+  id: serial("id").primaryKey(),
+  gameId: varchar("game_id").notNull(),
+  gameName: varchar("game_name").notNull(),
+  leaderboardType: varchar("leaderboard_type").notNull(), // "hours", "score", "wins", "kdr", "winrate"
+  period: varchar("period").default("all-time"), // "daily", "weekly", "monthly", "all-time"
+  region: varchar("region"), // optional region filtering
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Game reviews
+export const gameReviews = pgTable("game_reviews", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  gameId: varchar("game_id").notNull(),
+  gameName: varchar("game_name").notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  title: varchar("title"),
+  content: text("content"),
+  hoursPlayed: decimal("hours_played"),
+  isRecommended: boolean("is_recommended"),
+  isVisible: boolean("is_visible").default(true),
+  helpfulVotes: integer("helpful_votes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Game library tracking and sync
+export const gameLibrarySync = pgTable("game_library_sync", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  platform: varchar("platform").notNull(), // "steam", "epic", "uplay", "battlenet", "origin"
+  accountId: varchar("account_id").notNull(),
+  accountName: varchar("account_name"),
+  isConnected: boolean("is_connected").default(true),
+  lastSync: timestamp("last_sync"),
+  syncEnabled: boolean("sync_enabled").default(true),
+  accessToken: varchar("access_token"), // encrypted
+  refreshToken: varchar("refresh_token"), // encrypted
+  tokenExpiry: timestamp("token_expiry"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Define relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   posts: many(posts),

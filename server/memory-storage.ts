@@ -62,6 +62,13 @@ export class MemoryStorage implements IStorage {
   private friendRequests = new Map<number, FriendRequest>();
   private userBlocks = new Map<number, UserBlock>();
   private userPreferences = new Map<string, UserPreferences>();
+  private userGames = new Map<number, UserGame>();
+  private gameAchievements = new Map<number, GameAchievement>();
+  private gameSessions = new Map<number, GameSession>();
+  private gameStatistics = new Map<string, GameStatistics>(); // key: userId-gameId
+  private gameLeaderboards = new Map<string, GameLeaderboard>();
+  private gameReviews = new Map<number, GameReview>();
+  private gameLibrarySyncs = new Map<number, GameLibrarySync>();
 
   private postIdCounter = 1;
   private commentIdCounter = 1;
@@ -86,6 +93,11 @@ export class MemoryStorage implements IStorage {
   private badgeIdCounter = 1;
   private friendRequestIdCounter = 1;
   private blockIdCounter = 1;
+  private userGameIdCounter = 1;
+  private gameAchievementIdCounter = 1;
+  private gameSessionIdCounter = 1;
+  private gameReviewIdCounter = 1;
+  private gameLibrarySyncIdCounter = 1;
   private chatRoomMembershipIdCounter = 1;
 
   async getUser(id: string): Promise<User | undefined> {
@@ -736,5 +748,421 @@ export class MemoryStorage implements IStorage {
   async isFollowing(followerId: string, followingId: string): Promise<boolean> {
     return Array.from(this.follows.values())
       .some(follow => follow.followerId === followerId && follow.followingId === followingId);
+  }
+
+  // Gaming library operations
+  async addGameToLibrary(game: InsertUserGame): Promise<UserGame> {
+    const existing = Array.from(this.userGames.values())
+      .find(g => g.userId === game.userId && g.gameId === game.gameId && g.platform === game.platform);
+    
+    if (existing) {
+      throw new Error('Game already in library for this platform');
+    }
+
+    const newGame: UserGame = {
+      id: this.userGameIdCounter++,
+      ...game,
+      hoursPlayed: game.hoursPlayed || '0',
+      isPlaying: false,
+      isFavorite: game.isFavorite || false,
+      isPublic: game.isPublic !== false,
+      addedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.userGames.set(newGame.id, newGame);
+    return newGame;
+  }
+
+  async removeGameFromLibrary(gameId: string, userId: string): Promise<void> {
+    const game = Array.from(this.userGames.values())
+      .find(g => g.gameId === gameId && g.userId === userId);
+    
+    if (game) {
+      this.userGames.delete(game.id);
+    }
+  }
+
+  async updateGameInLibrary(gameId: string, userId: string, updates: Partial<UserGame>): Promise<UserGame> {
+    const game = Array.from(this.userGames.values())
+      .find(g => g.gameId === gameId && g.userId === userId);
+    
+    if (!game) throw new Error('Game not found in library');
+
+    const updatedGame = { ...game, ...updates, updatedAt: new Date() };
+    this.userGames.set(game.id, updatedGame);
+    return updatedGame;
+  }
+
+  async getUserGameLibrary(userId: string, filters?: {
+    platform?: string;
+    isFavorite?: boolean;
+    isPlaying?: boolean;
+  }): Promise<UserGame[]> {
+    let games = Array.from(this.userGames.values())
+      .filter(game => game.userId === userId);
+
+    if (filters) {
+      if (filters.platform) {
+        games = games.filter(game => game.platform === filters.platform);
+      }
+      if (filters.isFavorite !== undefined) {
+        games = games.filter(game => game.isFavorite === filters.isFavorite);
+      }
+      if (filters.isPlaying !== undefined) {
+        games = games.filter(game => game.isPlaying === filters.isPlaying);
+      }
+    }
+
+    return games.sort((a, b) => {
+      if (a.lastPlayed && b.lastPlayed) {
+        return b.lastPlayed.getTime() - a.lastPlayed.getTime();
+      }
+      return b.addedAt.getTime() - a.addedAt.getTime();
+    });
+  }
+
+  async getGameById(gameId: string, userId: string): Promise<UserGame | undefined> {
+    return Array.from(this.userGames.values())
+      .find(game => game.gameId === gameId && game.userId === userId);
+  }
+
+  async startGameSession(session: InsertGameSession): Promise<GameSession> {
+    const newSession: GameSession = {
+      id: this.gameSessionIdCounter++,
+      ...session,
+      sessionEnd: null,
+      duration: null,
+      score: session.score || null,
+      kills: session.kills || null,
+      deaths: session.deaths || null,
+      assists: session.assists || null,
+      wins: session.wins || 0,
+      losses: session.losses || 0,
+      xpGained: session.xpGained || 0,
+      notes: session.notes || null,
+      isPublic: session.isPublic !== false,
+      createdAt: new Date(),
+    };
+    this.gameSessions.set(newSession.id, newSession);
+
+    await this.updateGameInLibrary(session.gameId, session.userId, { 
+      isPlaying: true, 
+      lastPlayed: new Date() 
+    });
+
+    return newSession;
+  }
+
+  async endGameSession(sessionId: number, sessionEnd: Date, stats?: {
+    duration?: number;
+    score?: number;
+    kills?: number;
+    deaths?: number;
+    assists?: number;
+    wins?: number;
+    losses?: number;
+    xpGained?: number;
+  }): Promise<GameSession> {
+    const session = this.gameSessions.get(sessionId);
+    if (!session) throw new Error('Session not found');
+
+    const updatedSession = {
+      ...session,
+      sessionEnd,
+      duration: stats?.duration || Math.floor((sessionEnd.getTime() - session.sessionStart.getTime()) / 60000),
+      score: stats?.score || session.score,
+      kills: stats?.kills || session.kills,
+      deaths: stats?.deaths || session.deaths,
+      assists: stats?.assists || session.assists,
+      wins: stats?.wins || session.wins,
+      losses: stats?.losses || session.losses,
+      xpGained: stats?.xpGained || session.xpGained,
+    };
+    this.gameSessions.set(sessionId, updatedSession);
+
+    const game = await this.getGameById(session.gameId, session.userId);
+    await this.updateGameInLibrary(session.gameId, session.userId, { 
+      isPlaying: false,
+      hoursPlayed: (parseFloat(game ? game.hoursPlayed : '0') + (updatedSession.duration! / 60)).toString()
+    });
+
+    return updatedSession;
+  }
+
+  async getUserGameSessions(userId: string, gameId?: string, limit = 50): Promise<GameSession[]> {
+    let sessions = Array.from(this.gameSessions.values())
+      .filter(session => session.userId === userId);
+
+    if (gameId) {
+      sessions = sessions.filter(session => session.gameId === gameId);
+    }
+
+    return sessions
+      .sort((a, b) => b.sessionStart.getTime() - a.sessionStart.getTime())
+      .slice(0, limit);
+  }
+
+  async unlockGameAchievement(achievement: InsertGameAchievement): Promise<GameAchievement> {
+    const existing = Array.from(this.gameAchievements.values())
+      .find(a => a.userId === achievement.userId && a.gameId === achievement.gameId && a.achievementId === achievement.achievementId);
+    
+    if (existing) {
+      existing.progress = Math.min(existing.progress + 1, existing.maxProgress);
+      return existing;
+    }
+
+    const newAchievement: GameAchievement = {
+      id: this.gameAchievementIdCounter++,
+      ...achievement,
+      iconUrl: achievement.iconUrl || null,
+      rarity: achievement.rarity || 'common',
+      points: achievement.points || 0,
+      progress: achievement.progress || 1,
+      maxProgress: achievement.maxProgress || 1,
+      isSecret: achievement.isSecret || false,
+      unlockedAt: new Date(),
+    };
+    this.gameAchievements.set(newAchievement.id, newAchievement);
+    return newAchievement;
+  }
+
+  async getUserGameAchievements(userId: string, gameId?: string): Promise<GameAchievement[]> {
+    let achievements = Array.from(this.gameAchievements.values())
+      .filter(achievement => achievement.userId === userId);
+
+    if (gameId) {
+      achievements = achievements.filter(achievement => achievement.gameId === gameId);
+    }
+
+    return achievements.sort((a, b) => b.unlockedAt.getTime() - a.unlockedAt.getTime());
+  }
+
+  async updateAchievementProgress(achievementId: number, progress: number): Promise<void> {
+    const achievement = this.gameAchievements.get(achievementId);
+    if (achievement) {
+      achievement.progress = Math.min(progress, achievement.maxProgress);
+    }
+  }
+
+  async getGameStatistics(userId: string, gameId: string): Promise<GameStatistics | undefined> {
+    const key = `${userId}-${gameId}`;
+    return this.gameStatistics.get(key);
+  }
+
+  async updateGameStatistics(userId: string, gameId: string, sessionStats: {
+    duration: number;
+    kills?: number;
+    deaths?: number;
+    assists?: number;
+    wins?: number;
+    losses?: number;
+    score?: number;
+    xpGained?: number;
+  }): Promise<GameStatistics> {
+    const key = `${userId}-${gameId}`;
+    const game = await this.getGameById(gameId, userId);
+    const gameName = game?.gameName || 'Unknown Game';
+    
+    let stats = this.gameStatistics.get(key);
+    
+    if (!stats) {
+      stats = {
+        id: Object.keys(this.gameStatistics).length + 1,
+        userId,
+        gameId,
+        gameName,
+        totalHours: '0',
+        totalSessions: 0,
+        totalKills: 0,
+        totalDeaths: 0,
+        totalAssists: 0,
+        totalWins: 0,
+        totalLosses: 0,
+        totalScore: 0,
+        averageScore: '0',
+        bestScore: 0,
+        killDeathRatio: '0',
+        winRate: '0',
+        currentStreak: 0,
+        bestStreak: 0,
+        lastPlayed: null,
+        updatedAt: new Date(),
+      };
+    }
+
+    stats.totalHours = (parseFloat(stats.totalHours) + (sessionStats.duration / 60)).toString();
+    stats.totalSessions += 1;
+    stats.totalKills += sessionStats.kills || 0;
+    stats.totalDeaths += sessionStats.deaths || 0;
+    stats.totalAssists += sessionStats.assists || 0;
+    stats.totalWins += sessionStats.wins || 0;
+    stats.totalLosses += sessionStats.losses || 0;
+    stats.totalScore += sessionStats.score || 0;
+    stats.averageScore = (stats.totalScore / stats.totalSessions).toString();
+    stats.bestScore = Math.max(stats.bestScore, sessionStats.score || 0);
+    stats.killDeathRatio = stats.totalDeaths > 0 ? (stats.totalKills / stats.totalDeaths).toString() : stats.totalKills.toString();
+    stats.winRate = (stats.totalWins + stats.totalLosses) > 0 ? (stats.totalWins / (stats.totalWins + stats.totalLosses) * 100).toString() : '0';
+    stats.lastPlayed = new Date();
+    stats.updatedAt = new Date();
+
+    if (sessionStats.wins && sessionStats.wins > 0) {
+      stats.currentStreak += sessionStats.wins;
+      stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
+    } else if (sessionStats.losses && sessionStats.losses > 0) {
+      stats.currentStreak = 0;
+    }
+
+    this.gameStatistics.set(key, stats);
+    return stats;
+  }
+
+  async getTopGames(userId: string, metric: 'hours' | 'score' | 'wins', limit = 10): Promise<GameStatistics[]> {
+    const userStats = Array.from(this.gameStatistics.values())
+      .filter(stats => stats.userId === userId);
+
+    return userStats.sort((a, b) => {
+      switch (metric) {
+        case 'hours':
+          return parseFloat(b.totalHours) - parseFloat(a.totalHours);
+        case 'score':
+          return b.totalScore - a.totalScore;
+        case 'wins':
+          return b.totalWins - a.totalWins;
+        default:
+          return 0;
+      }
+    }).slice(0, limit);
+  }
+
+  async createGameReview(review: InsertGameReview): Promise<GameReview> {
+    const existing = Array.from(this.gameReviews.values())
+      .find(r => r.userId === review.userId && r.gameId === review.gameId);
+    
+    if (existing) {
+      throw new Error('You have already reviewed this game');
+    }
+
+    const newReview: GameReview = {
+      id: this.gameReviewIdCounter++,
+      ...review,
+      title: review.title || null,
+      content: review.content || null,
+      hoursPlayed: review.hoursPlayed || null,
+      isRecommended: review.isRecommended || null,
+      isVisible: review.isVisible !== false,
+      helpfulVotes: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.gameReviews.set(newReview.id, newReview);
+    return newReview;
+  }
+
+  async updateGameReview(reviewId: number, updates: Partial<GameReview>, userId: string): Promise<GameReview> {
+    const review = this.gameReviews.get(reviewId);
+    if (!review) throw new Error('Review not found');
+    if (review.userId !== userId) throw new Error('Permission denied');
+
+    const updatedReview = { ...review, ...updates, updatedAt: new Date() };
+    this.gameReviews.set(reviewId, updatedReview);
+    return updatedReview;
+  }
+
+  async deleteGameReview(reviewId: number, userId: string): Promise<void> {
+    const review = this.gameReviews.get(reviewId);
+    if (!review) throw new Error('Review not found');
+    if (review.userId !== userId) throw new Error('Permission denied');
+
+    this.gameReviews.delete(reviewId);
+  }
+
+  async getGameReviews(gameId: string, limit = 20): Promise<(GameReview & { user: User })[]> {
+    const reviews = Array.from(this.gameReviews.values())
+      .filter(review => review.gameId === gameId && review.isVisible)
+      .sort((a, b) => b.helpfulVotes - a.helpfulVotes || b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+
+    return reviews.map(review => ({
+      ...review,
+      user: this.users.get(review.userId)!,
+    })).filter(r => r.user);
+  }
+
+  async getUserGameReviews(userId: string): Promise<GameReview[]> {
+    return Array.from(this.gameReviews.values())
+      .filter(review => review.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getGameLeaderboard(gameId: string, type: string, period = 'all-time', region?: string, limit = 100): Promise<(GameStatistics & { user: User; rank: number })[]> {
+    let stats = Array.from(this.gameStatistics.values())
+      .filter(stat => stat.gameId === gameId);
+
+    stats.sort((a, b) => {
+      switch (type) {
+        case 'hours':
+          return parseFloat(b.totalHours) - parseFloat(a.totalHours);
+        case 'score':
+          return b.totalScore - a.totalScore;
+        case 'wins':
+          return b.totalWins - a.totalWins;
+        default:
+          return 0;
+      }
+    });
+
+    return stats.slice(0, limit).map((stat, index) => ({
+      ...stat,
+      user: this.users.get(stat.userId)!,
+      rank: index + 1,
+    })).filter(s => s.user);
+  }
+
+  async updateLeaderboards(gameId: string): Promise<void> {
+    // Implementation for memory storage
+  }
+
+  async connectGameLibrary(sync: InsertGameLibrarySync): Promise<GameLibrarySync> {
+    const newSync: GameLibrarySync = {
+      id: this.gameLibrarySyncIdCounter++,
+      ...sync,
+      accountName: sync.accountName || null,
+      isConnected: true,
+      lastSync: null,
+      syncEnabled: sync.syncEnabled !== false,
+      accessToken: sync.accessToken || null,
+      refreshToken: sync.refreshToken || null,
+      tokenExpiry: sync.tokenExpiry || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.gameLibrarySyncs.set(newSync.id, newSync);
+    return newSync;
+  }
+
+  async disconnectGameLibrary(syncId: number, userId: string): Promise<void> {
+    const sync = this.gameLibrarySyncs.get(syncId);
+    if (!sync) throw new Error('Library sync not found');
+    if (sync.userId !== userId) throw new Error('Permission denied');
+
+    sync.isConnected = false;
+    sync.updatedAt = new Date();
+  }
+
+  async getUserLibrarySyncs(userId: string): Promise<GameLibrarySync[]> {
+    return Array.from(this.gameLibrarySyncs.values())
+      .filter(sync => sync.userId === userId && sync.isConnected)
+      .sort((a, b) => a.platform.localeCompare(b.platform));
+  }
+
+  async syncGameLibrary(syncId: number): Promise<UserGame[]> {
+    const sync = this.gameLibrarySyncs.get(syncId);
+    if (!sync) throw new Error('Library sync not found');
+
+    const syncedGames: UserGame[] = [];
+    sync.lastSync = new Date();
+    sync.updatedAt = new Date();
+
+    return syncedGames;
   }
 }

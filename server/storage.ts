@@ -261,6 +261,67 @@ export interface IStorage {
     isFriend?: boolean;
     mutualFollowers?: number;
   })[]>;
+  
+  // Gaming library operations
+  addGameToLibrary(game: InsertUserGame): Promise<UserGame>;
+  removeGameFromLibrary(gameId: string, userId: string): Promise<void>;
+  updateGameInLibrary(gameId: string, userId: string, updates: Partial<UserGame>): Promise<UserGame>;
+  getUserGameLibrary(userId: string, filters?: {
+    platform?: string;
+    isFavorite?: boolean;
+    isPlaying?: boolean;
+  }): Promise<UserGame[]>;
+  getGameById(gameId: string, userId: string): Promise<UserGame | undefined>;
+  
+  // Game sessions
+  startGameSession(session: InsertGameSession): Promise<GameSession>;
+  endGameSession(sessionId: number, sessionEnd: Date, stats?: {
+    duration?: number;
+    score?: number;
+    kills?: number;
+    deaths?: number;
+    assists?: number;
+    wins?: number;
+    losses?: number;
+    xpGained?: number;
+  }): Promise<GameSession>;
+  getUserGameSessions(userId: string, gameId?: string, limit?: number): Promise<GameSession[]>;
+  
+  // Game achievements
+  unlockGameAchievement(achievement: InsertGameAchievement): Promise<GameAchievement>;
+  getUserGameAchievements(userId: string, gameId?: string): Promise<GameAchievement[]>;
+  updateAchievementProgress(achievementId: number, progress: number): Promise<void>;
+  
+  // Game statistics
+  getGameStatistics(userId: string, gameId: string): Promise<GameStatistics | undefined>;
+  updateGameStatistics(userId: string, gameId: string, sessionStats: {
+    duration: number;
+    kills?: number;
+    deaths?: number;
+    assists?: number;
+    wins?: number;
+    losses?: number;
+    score?: number;
+    xpGained?: number;
+  }): Promise<GameStatistics>;
+  getTopGames(userId: string, metric: 'hours' | 'score' | 'wins', limit?: number): Promise<GameStatistics[]>;
+  
+  // Game reviews
+  createGameReview(review: InsertGameReview): Promise<GameReview>;
+  updateGameReview(reviewId: number, updates: Partial<GameReview>, userId: string): Promise<GameReview>;
+  deleteGameReview(reviewId: number, userId: string): Promise<void>;
+  getGameReviews(gameId: string, limit?: number): Promise<(GameReview & { user: User })[]>;
+  getUserGameReviews(userId: string): Promise<GameReview[]>;
+  
+  // Game leaderboards
+  getGameLeaderboard(gameId: string, type: string, period?: string, region?: string, limit?: number): Promise<(GameStatistics & { user: User; rank: number })[]>;
+  updateLeaderboards(gameId: string): Promise<void>;
+  
+  // Library sync
+  connectGameLibrary(sync: InsertGameLibrarySync): Promise<GameLibrarySync>;
+  disconnectGameLibrary(syncId: number, userId: string): Promise<void>;
+  getUserLibrarySyncs(userId: string): Promise<GameLibrarySync[]>;
+  syncGameLibrary(syncId: number): Promise<UserGame[]>;
 }
 
 export class DatabaseStorage implements IStorage {
