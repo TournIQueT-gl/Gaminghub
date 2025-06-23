@@ -56,6 +56,12 @@ export class MemoryStorage implements IStorage {
   private chatRoomMemberships = new Map<number, ChatRoomMembership>();
   private notifications = new Map<number, Notification>();
   private follows = new Map<number, Follow>();
+  private activities = new Map<number, Activity>();
+  private userSocials = new Map<number, UserSocial>();
+  private userBadges = new Map<number, UserBadge>();
+  private friendRequests = new Map<number, FriendRequest>();
+  private userBlocks = new Map<number, UserBlock>();
+  private userPreferences = new Map<string, UserPreferences>();
 
   private postIdCounter = 1;
   private commentIdCounter = 1;
@@ -75,6 +81,11 @@ export class MemoryStorage implements IStorage {
   private messageIdCounter = 1;
   private notificationIdCounter = 1;
   private followIdCounter = 1;
+  private activityIdCounter = 1;
+  private socialIdCounter = 1;
+  private badgeIdCounter = 1;
+  private friendRequestIdCounter = 1;
+  private blockIdCounter = 1;
   private chatRoomMembershipIdCounter = 1;
 
   async getUser(id: string): Promise<User | undefined> {

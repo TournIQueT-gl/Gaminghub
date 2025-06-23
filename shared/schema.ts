@@ -214,7 +214,89 @@ export const follows = pgTable("follows", {
   id: serial("id").primaryKey(),
   followerId: varchar("follower_id").notNull().references(() => users.id),
   followingId: varchar("following_id").notNull().references(() => users.id),
+  isAccepted: boolean("is_accepted").default(true), // for private accounts
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User activity feed
+export const activities = pgTable("activities", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type").notNull(), // "post", "like", "comment", "follow", "achievement", "tournament_join", "clan_join"
+  action: varchar("action").notNull(), // "created", "liked", "commented", "followed", "unlocked", "joined"
+  targetType: varchar("target_type"), // "user", "post", "comment", "tournament", "clan", "achievement"
+  targetId: varchar("target_id"), // ID of the target entity
+  metadata: jsonb("metadata"), // additional context data
+  visibility: varchar("visibility").default("public"), // "public", "followers", "private"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User social links and profiles
+export const userSocials = pgTable("user_socials", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  platform: varchar("platform").notNull(), // "twitch", "youtube", "twitter", "discord", "steam"
+  username: varchar("username").notNull(),
+  url: varchar("url"),
+  isVerified: boolean("is_verified").default(false),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User badges and achievements
+export const userBadges = pgTable("user_badges", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  badgeId: varchar("badge_id").notNull(), // system-defined badge identifier
+  title: varchar("title").notNull(),
+  description: text("description"),
+  iconUrl: varchar("icon_url"),
+  color: varchar("color"), // hex color for badge
+  rarity: varchar("rarity").default("common"), // "common", "rare", "epic", "legendary"
+  category: varchar("category"), // "gaming", "social", "tournament", "clan", "special"
+  progress: integer("progress").default(1),
+  maxProgress: integer("max_progress").default(1),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  isVisible: boolean("is_visible").default(true),
+});
+
+// Friend requests (separate from follows for explicit friendship)
+export const friendRequests = pgTable("friend_requests", {
+  id: serial("id").primaryKey(),
+  senderId: varchar("sender_id").notNull().references(() => users.id),
+  receiverId: varchar("receiver_id").notNull().references(() => users.id),
+  status: varchar("status").default("pending"), // "pending", "accepted", "rejected", "cancelled"
+  message: text("message"), // optional message with request
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User blocks (for blocking other users)
+export const userBlocks = pgTable("user_blocks", {
+  id: serial("id").primaryKey(),
+  blockerId: varchar("blocker_id").notNull().references(() => users.id),
+  blockedId: varchar("blocked_id").notNull().references(() => users.id),
+  reason: varchar("reason"), // optional reason for blocking
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User preferences and privacy settings
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  isProfilePublic: boolean("is_profile_public").default(true),
+  allowFollowRequests: boolean("allow_follow_requests").default(true),
+  allowFriendRequests: boolean("allow_friend_requests").default(true),
+  allowMessages: varchar("allow_messages").default("everyone"), // "everyone", "friends", "none"
+  showOnlineStatus: boolean("show_online_status").default(true),
+  showGameActivity: boolean("show_game_activity").default(true),
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  language: varchar("language").default("en"),
+  timezone: varchar("timezone").default("UTC"),
+  theme: varchar("theme").default("dark"), // "light", "dark", "auto"
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Define relations

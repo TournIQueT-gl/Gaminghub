@@ -186,9 +186,81 @@ export interface IStorage {
   // Follow operations
   followUser(followerId: string, followingId: string): Promise<Follow>;
   unfollowUser(followerId: string, followingId: string): Promise<void>;
-  getUserFollowers(userId: string): Promise<Follow[]>;
-  getUserFollowing(userId: string): Promise<Follow[]>;
+  getUserFollowers(userId: string): Promise<(Follow & { user: User })[]>;
+  getUserFollowing(userId: string): Promise<(Follow & { user: User })[]>;
   isFollowing(followerId: string, followingId: string): Promise<boolean>;
+  
+  // Activity feed operations
+  createActivity(activity: InsertActivity): Promise<Activity>;
+  getUserActivityFeed(userId: string, limit?: number, offset?: number): Promise<(Activity & {
+    user: User;
+    targetUser?: User;
+    targetPost?: Post;
+    targetTournament?: Tournament;
+    targetClan?: Clan;
+  })[]>;
+  getFollowingActivityFeed(userId: string, limit?: number, offset?: number): Promise<(Activity & {
+    user: User;
+    targetUser?: User;
+    targetPost?: Post;
+    targetTournament?: Tournament;
+    targetClan?: Clan;
+  })[]>;
+  
+  // Social profiles
+  createUserSocial(social: InsertUserSocial): Promise<UserSocial>;
+  updateUserSocial(socialId: number, updates: Partial<UserSocial>, userId: string): Promise<UserSocial>;
+  deleteUserSocial(socialId: number, userId: string): Promise<void>;
+  getUserSocials(userId: string): Promise<UserSocial[]>;
+  
+  // User badges
+  awardUserBadge(userId: string, badgeId: string, title: string, description: string, options?: {
+    iconUrl?: string;
+    color?: string;
+    rarity?: string;
+    category?: string;
+  }): Promise<UserBadge>;
+  getUserBadges(userId: string, visible?: boolean): Promise<UserBadge[]>;
+  updateBadgeVisibility(badgeId: number, isVisible: boolean, userId: string): Promise<void>;
+  
+  // Friend requests
+  sendFriendRequest(senderId: string, receiverId: string, message?: string): Promise<FriendRequest>;
+  respondToFriendRequest(requestId: number, status: 'accepted' | 'rejected', userId: string): Promise<void>;
+  cancelFriendRequest(requestId: number, userId: string): Promise<void>;
+  getFriendRequests(userId: string, type: 'sent' | 'received'): Promise<(FriendRequest & { 
+    sender?: User; 
+    receiver?: User; 
+  })[]>;
+  getFriends(userId: string): Promise<User[]>;
+  areFriends(userId1: string, userId2: string): Promise<boolean>;
+  
+  // User blocking
+  blockUser(blockerId: string, blockedId: string, reason?: string): Promise<UserBlock>;
+  unblockUser(blockerId: string, blockedId: string): Promise<void>;
+  getBlockedUsers(userId: string): Promise<(UserBlock & { user: User })[]>;
+  isBlocked(userId1: string, userId2: string): Promise<boolean>;
+  
+  // User preferences
+  getUserPreferences(userId: string): Promise<UserPreferences | undefined>;
+  updateUserPreferences(userId: string, preferences: Partial<UserPreferences>): Promise<UserPreferences>;
+  
+  // Discovery and search
+  discoverUsers(currentUserId: string, filters?: {
+    game?: string;
+    region?: string;
+    skillLevel?: string;
+    excludeFollowing?: boolean;
+  }): Promise<(User & { 
+    mutualFollowers: number;
+    commonGames: string[];
+    followersCount: number;
+    isFollowing: boolean;
+  })[]>;
+  searchUsers(query: string, currentUserId?: string, limit?: number): Promise<(User & {
+    isFollowing?: boolean;
+    isFriend?: boolean;
+    mutualFollowers?: number;
+  })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
