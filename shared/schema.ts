@@ -322,6 +322,18 @@ export const insertTournamentSchema = createInsertSchema(tournaments).omit({
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
+});
+
+export const insertChatRoomSchema = createInsertSchema(chatRooms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertChatRoomMembershipSchema = createInsertSchema(chatRoomMemberships).omit({
+  id: true,
+  joinedAt: true,
 });
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
@@ -342,11 +354,14 @@ export type InsertTournament = z.infer<typeof insertTournamentSchema>;
 export type Tournament = typeof tournaments.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatRoom = z.infer<typeof insertChatRoomSchema>;
+export type ChatRoom = typeof chatRooms.$inferSelect;
+export type InsertChatRoomMembership = z.infer<typeof insertChatRoomMembershipSchema>;
+export type ChatRoomMembership = typeof chatRoomMemberships.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type ClanMembership = typeof clanMemberships.$inferSelect;
 export type TournamentParticipant = typeof tournamentParticipants.$inferSelect;
 export type TournamentMatch = typeof tournamentMatches.$inferSelect;
-export type ChatRoom = typeof chatRooms.$inferSelect;
 export type Like = typeof likes.$inferSelect;
 export type Follow = typeof follows.$inferSelect;

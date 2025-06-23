@@ -78,11 +78,29 @@ export interface IStorage {
   updateMatchResult(matchId: number, winnerId: number, score: any): Promise<void>;
   
   // Chat operations
-  createChatRoom(room: Omit<ChatRoom, 'id' | 'createdAt'>): Promise<ChatRoom>;
-  getChatRooms(userId: string): Promise<ChatRoom[]>;
-  joinChatRoom(roomId: number, userId: string): Promise<void>;
-  sendMessage(message: InsertChatMessage): Promise<ChatMessage>;
-  getMessages(roomId: number, limit?: number): Promise<(ChatMessage & { user: User })[]>;
+  createChatRoom(room: InsertChatRoom): Promise<ChatRoom>;
+  getChatRooms(userId: string): Promise<(ChatRoom & { 
+    memberCount: number; 
+    lastMessage: ChatMessage | null;
+    unreadCount: number;
+    otherUser?: User;
+  })[]>;
+  getChatRoom(roomId: number, userId: string): Promise<(ChatRoom & { 
+    members: (ChatRoomMembership & { user: User })[];
+    memberCount: number;
+  }) | null>;
+  joinChatRoom(roomId: number, userId: string, role?: string): Promise<ChatRoomMembership>;
+  leaveChatRoom(roomId: number, userId: string): Promise<void>;
+  updateChatRoom(roomId: number, updates: Partial<ChatRoom>): Promise<ChatRoom>;
+  sendMessage(message: InsertChatMessage): Promise<ChatMessage & { user: User }>;
+  getMessages(roomId: number, limit?: number, before?: number): Promise<(ChatMessage & { user: User; replyTo?: ChatMessage & { user: User } })[]>;
+  editMessage(messageId: number, content: string, userId: string): Promise<ChatMessage>;
+  deleteMessage(messageId: number, userId: string): Promise<void>;
+  addReaction(messageId: number, emoji: string, userId: string): Promise<void>;
+  removeReaction(messageId: number, emoji: string, userId: string): Promise<void>;
+  markAsRead(roomId: number, userId: string): Promise<void>;
+  searchMessages(roomId: number, query: string, limit?: number): Promise<(ChatMessage & { user: User })[]>;
+  getOrCreateDirectRoom(userId1: string, userId2: string): Promise<ChatRoom>;
   
   // Notification operations
   createNotification(notification: InsertNotification): Promise<Notification>;

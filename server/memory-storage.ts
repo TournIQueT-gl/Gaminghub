@@ -17,6 +17,8 @@ import type {
   ChatRoom,
   ChatMessage,
   InsertChatMessage,
+  ChatRoomMembership,
+  InsertChatRoom,
   Notification,
   InsertNotification,
   Follow,
@@ -34,6 +36,7 @@ export class MemoryStorage implements IStorage {
   private tournamentMatches = new Map<number, TournamentMatch>();
   private chatRooms = new Map<number, ChatRoom>();
   private chatMessages = new Map<number, ChatMessage>();
+  private chatRoomMemberships = new Map<number, ChatRoomMembership>();
   private notifications = new Map<number, Notification>();
   private follows = new Map<number, Follow>();
 
@@ -49,6 +52,7 @@ export class MemoryStorage implements IStorage {
   private messageIdCounter = 1;
   private notificationIdCounter = 1;
   private followIdCounter = 1;
+  private chatRoomMembershipIdCounter = 1;
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
@@ -342,44 +346,296 @@ export class MemoryStorage implements IStorage {
     }
   }
 
-  async createChatRoom(room: Omit<ChatRoom, 'id' | 'createdAt'>): Promise<ChatRoom> {
+  async createChatRoom(room: InsertChatRoom): Promise<ChatRoom> {
     const newRoom: ChatRoom = {
       id: this.roomIdCounter++,
       ...room,
+      lastMessageAt: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.chatRooms.set(newRoom.id, newRoom);
     return newRoom;
   }
 
-  async getChatRooms(userId: string): Promise<ChatRoom[]> {
-    return Array.from(this.chatRooms.values());
+  async getChatRooms(userId: string): Promise<(ChatRoom & { 
+    memberCount: number; 
+    lastMessage: ChatMessage | null;
+    unreadCount: number;
+    otherUser?: User;
+  })[]> {
+    const userMemberships = Array.from(this.chatRoomMemberships.values())
+      .filter(membership => membership.userId === userId && !membership.leftAt);
+    
+    return userMemberships.map(membership => {
+      const room = this.chatRooms.get(membership.roomId)!;
+      if (!room) return null;
+
+      const allMembers = Array.from(this.chatRoomMemberships.values())
+        .filter(m => m.roomId === room.id && !m.leftAt);
+      
+      const lastMessage = Array.from(this.chatMessages.values())
+        .filter(msg => msg.roomId === room.id && !msg.isDeleted)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] || null;
+
+      const unreadCount = Array.from(this.chatMessages.values())
+        .filter(msg => 
+          msg.roomId === room.id && 
+          !msg.isDeleted &&
+          msg.userId !== userId &&
+          (!membership.lastReadAt || msg.createdAt > membership.lastReadAt)
+        ).length;
+
+      let otherUser: User | undefined;
+      if (room.type === 'direct' && allMembers.length === 2) {
+        const otherMember = allMembers.find(m => m.userId !== userId);
+        if (otherMember) {
+          otherUser = this.users.get(otherMember.userId);
+        }
+      }
+
+      return {
+        ...room,
+        memberCount: allMembers.length,
+        lastMessage,
+        unreadCount,
+        otherUser,
+      };
+    }).filter(Boolean) as any[];
   }
 
-  async joinChatRoom(roomId: number, userId: string): Promise<void> {
-    // In memory implementation
+  async getChatRoom(roomId: number, userId: string): Promise<(ChatRoom & { 
+    members: (ChatRoomMembership & { user: User })[];
+    memberCount: number;
+  }) | null> {
+    const room = this.chatRooms.get(roomId);
+    if (!room) return null;
+
+    const members = Array.from(this.chatRoomMemberships.values())
+      .filter(m => m.roomId === roomId && !m.leftAt)
+      .map(membership => ({
+        ...membership,
+        user: this.users.get(membership.userId)!,
+      }))
+      .filter(m => m.user);
+
+    return {
+      ...room,
+      members,
+      memberCount: members.length,
+    };
   }
 
-  async sendMessage(message: InsertChatMessage): Promise<ChatMessage> {
+  async joinChatRoom(roomId: number, userId: string, role = 'member'): Promise<ChatRoomMembership> {
+    const membership: ChatRoomMembership = {
+      id: this.chatRoomMembershipIdCounter++,
+      roomId,
+      userId,
+      role,
+      nickname: null,
+      lastReadAt: null,
+      mutedUntil: null,
+      isBlocked: false,
+      joinedAt: new Date(),
+      leftAt: null,
+    };
+    this.chatRoomMemberships.set(membership.id, membership);
+    return membership;
+  }
+
+  async leaveChatRoom(roomId: number, userId: string): Promise<void> {
+    const membership = Array.from(this.chatRoomMemberships.values())
+      .find(m => m.roomId === roomId && m.userId === userId && !m.leftAt);
+    
+    if (membership) {
+      membership.leftAt = new Date();
+    }
+  }
+
+  async updateChatRoom(roomId: number, updates: Partial<ChatRoom>): Promise<ChatRoom> {
+    const room = this.chatRooms.get(roomId);
+    if (!room) throw new Error('Room not found');
+
+    const updatedRoom = { ...room, ...updates, updatedAt: new Date() };
+    this.chatRooms.set(roomId, updatedRoom);
+    return updatedRoom;
+  }
+
+  async sendMessage(message: InsertChatMessage): Promise<ChatMessage & { user: User }> {
     const newMessage: ChatMessage = {
       id: this.messageIdCounter++,
       ...message,
+      messageType: message.messageType || 'text',
+      attachments: message.attachments || null,
+      replyToId: message.replyToId || null,
+      isEdited: false,
+      editedAt: null,
+      isDeleted: false,
+      reactions: message.reactions || [],
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.chatMessages.set(newMessage.id, newMessage);
-    return newMessage;
+
+    // Update room's last message time
+    const room = this.chatRooms.get(message.roomId);
+    if (room) {
+      room.lastMessageAt = new Date();
+      room.updatedAt = new Date();
+    }
+
+    const user = this.users.get(message.userId)!;
+    return { ...newMessage, user };
   }
 
-  async getMessages(roomId: number, limit = 50): Promise<(ChatMessage & { user: User })[]> {
-    return Array.from(this.chatMessages.values())
-      .filter(message => message.roomId === roomId)
-      .sort((a, b) => a.createdAt!.getTime() - b.createdAt!.getTime())
-      .slice(-limit)
-      .map(message => ({
-        ...message,
-        user: this.users.get(message.userId)!
-      }))
-      .filter(item => item.user);
+  async getMessages(roomId: number, limit = 50, before?: number): Promise<(ChatMessage & { user: User; replyTo?: ChatMessage & { user: User } })[]> {
+    let messages = Array.from(this.chatMessages.values())
+      .filter(message => message.roomId === roomId && !message.isDeleted);
+
+    if (before) {
+      messages = messages.filter(msg => msg.id < before);
+    }
+
+    messages = messages
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+
+    return messages.map(message => {
+      const user = this.users.get(message.userId)!;
+      let replyTo: (ChatMessage & { user: User }) | undefined;
+      
+      if (message.replyToId) {
+        const replyMessage = this.chatMessages.get(message.replyToId);
+        if (replyMessage) {
+          const replyUser = this.users.get(replyMessage.userId)!;
+          replyTo = { ...replyMessage, user: replyUser };
+        }
+      }
+
+      return { ...message, user, replyTo };
+    }).filter(m => m.user);
+  }
+
+  async editMessage(messageId: number, content: string, userId: string): Promise<ChatMessage> {
+    const message = this.chatMessages.get(messageId);
+    if (!message || message.userId !== userId) {
+      throw new Error('Message not found or unauthorized');
+    }
+
+    message.content = content;
+    message.isEdited = true;
+    message.editedAt = new Date();
+    message.updatedAt = new Date();
+
+    return message;
+  }
+
+  async deleteMessage(messageId: number, userId: string): Promise<void> {
+    const message = this.chatMessages.get(messageId);
+    if (!message || message.userId !== userId) {
+      throw new Error('Message not found or unauthorized');
+    }
+
+    message.isDeleted = true;
+    message.updatedAt = new Date();
+  }
+
+  async addReaction(messageId: number, emoji: string, userId: string): Promise<void> {
+    const message = this.chatMessages.get(messageId);
+    if (!message) throw new Error('Message not found');
+
+    const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+    const existingReaction = reactions.find((r: any) => r.emoji === emoji);
+
+    if (existingReaction) {
+      if (!existingReaction.userIds.includes(userId)) {
+        existingReaction.userIds.push(userId);
+      }
+    } else {
+      reactions.push({ emoji, userIds: [userId] });
+    }
+
+    message.reactions = reactions;
+    message.updatedAt = new Date();
+  }
+
+  async removeReaction(messageId: number, emoji: string, userId: string): Promise<void> {
+    const message = this.chatMessages.get(messageId);
+    if (!message) throw new Error('Message not found');
+
+    const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+    const reactionIndex = reactions.findIndex((r: any) => r.emoji === emoji);
+
+    if (reactionIndex !== -1) {
+      const reaction = reactions[reactionIndex];
+      reaction.userIds = reaction.userIds.filter((id: string) => id !== userId);
+      
+      if (reaction.userIds.length === 0) {
+        reactions.splice(reactionIndex, 1);
+      }
+    }
+
+    message.reactions = reactions;
+    message.updatedAt = new Date();
+  }
+
+  async markAsRead(roomId: number, userId: string): Promise<void> {
+    const membership = Array.from(this.chatRoomMemberships.values())
+      .find(m => m.roomId === roomId && m.userId === userId && !m.leftAt);
+
+    if (membership) {
+      membership.lastReadAt = new Date();
+    }
+  }
+
+  async searchMessages(roomId: number, query: string, limit = 20): Promise<(ChatMessage & { user: User })[]> {
+    const messages = Array.from(this.chatMessages.values())
+      .filter(message => 
+        message.roomId === roomId && 
+        !message.isDeleted &&
+        message.content.toLowerCase().includes(query.toLowerCase())
+      )
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+
+    return messages.map(message => ({
+      ...message,
+      user: this.users.get(message.userId)!,
+    })).filter(m => m.user);
+  }
+
+  async getOrCreateDirectRoom(userId1: string, userId2: string): Promise<ChatRoom> {
+    // Find existing direct room between these users
+    const user1Memberships = Array.from(this.chatRoomMemberships.values())
+      .filter(m => m.userId === userId1 && !m.leftAt);
+    
+    for (const membership of user1Memberships) {
+      const room = this.chatRooms.get(membership.roomId);
+      if (room?.type === 'direct') {
+        const otherMembership = Array.from(this.chatRoomMemberships.values())
+          .find(m => m.roomId === room.id && m.userId === userId2 && !m.leftAt);
+        
+        if (otherMembership) {
+          return room;
+        }
+      }
+    }
+
+    // Create new direct room
+    const room = await this.createChatRoom({
+      name: null,
+      description: null,
+      type: 'direct',
+      isPrivate: true,
+      maxMembers: 2,
+      createdBy: userId1,
+    });
+
+    // Add both users to the room
+    await this.joinChatRoom(room.id, userId1, 'member');
+    await this.joinChatRoom(room.id, userId2, 'member');
+
+    return room;
   }
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
