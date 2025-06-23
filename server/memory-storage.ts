@@ -1168,4 +1168,238 @@ export class MemoryStorage implements IStorage {
 
     return syncedGames;
   }
+
+  // Enhanced notification operations
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const newNotification: Notification = {
+      id: this.notificationIdCounter++,
+      ...notification,
+      category: notification.category || 'general',
+      priority: notification.priority || 'normal',
+      isRead: false,
+      isArchived: false,
+      readAt: null,
+      createdAt: new Date(),
+    };
+    this.notifications.set(newNotification.id, newNotification);
+
+    // Send push notification if user has subscriptions and settings allow it
+    const settings = await this.getUserNotificationSettings(notification.userId);
+    const typeSettings = settings.find(s => s.type === notification.type);
+    
+    if (!typeSettings || typeSettings.push) {
+      await this.sendPushNotification(notification.userId, {
+        title: newNotification.title,
+        body: newNotification.message,
+        data: {
+          notificationId: newNotification.id,
+          type: newNotification.type,
+          actionUrl: newNotification.actionUrl,
+        },
+      });
+    }
+
+    return newNotification;
+  }
+
+  async getUserNotifications(userId: string, filters?: {
+    category?: string;
+    isRead?: boolean;
+    isArchived?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<Notification[]> {
+    let notifications = Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId);
+
+    // Apply filters
+    if (filters) {
+      if (filters.category) {
+        notifications = notifications.filter(n => n.category === filters.category);
+      }
+      if (filters.isRead !== undefined) {
+        notifications = notifications.filter(n => n.isRead === filters.isRead);
+      }
+      if (filters.isArchived !== undefined) {
+        notifications = notifications.filter(n => n.isArchived === filters.isArchived);
+      }
+    }
+
+    // Filter out expired notifications
+    const now = new Date();
+    notifications = notifications.filter(n => !n.expiresAt || n.expiresAt > now);
+
+    // Sort by creation date (newest first)
+    notifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    // Apply pagination
+    const limit = filters?.limit || 50;
+    const offset = filters?.offset || 0;
+    return notifications.slice(offset, offset + limit);
+  }
+
+  async markNotificationAsRead(id: number, userId: string): Promise<void> {
+    const notification = this.notifications.get(id);
+    if (notification && notification.userId === userId && !notification.isRead) {
+      notification.isRead = true;
+      notification.readAt = new Date();
+    }
+  }
+
+  async markAllNotificationsAsRead(userId: string, category?: string): Promise<void> {
+    Array.from(this.notifications.values())
+      .filter(notification => 
+        notification.userId === userId && 
+        !notification.isRead &&
+        (!category || notification.category === category)
+      )
+      .forEach(notification => {
+        notification.isRead = true;
+        notification.readAt = new Date();
+      });
+  }
+
+  async archiveNotification(id: number, userId: string): Promise<void> {
+    const notification = this.notifications.get(id);
+    if (notification && notification.userId === userId) {
+      notification.isArchived = true;
+    }
+  }
+
+  async deleteNotification(id: number, userId: string): Promise<void> {
+    const notification = this.notifications.get(id);
+    if (notification && notification.userId === userId) {
+      this.notifications.delete(id);
+    }
+  }
+
+  async getUnreadNotificationCount(userId: string, category?: string): Promise<number> {
+    return Array.from(this.notifications.values())
+      .filter(notification => 
+        notification.userId === userId && 
+        !notification.isRead && 
+        !notification.isArchived &&
+        (!category || notification.category === category) &&
+        (!notification.expiresAt || notification.expiresAt > new Date())
+      ).length;
+  }
+
+  // Notification settings
+  async getUserNotificationSettings(userId: string): Promise<NotificationSettings[]> {
+    let settings = this.notificationSettings.get(userId);
+    
+    if (!settings) {
+      // Create default settings for all notification types
+      const defaultTypes = [
+        'follow', 'like', 'comment', 'friend_request', 'tournament', 
+        'clan', 'achievement', 'message', 'system'
+      ];
+      
+      settings = defaultTypes.map(type => ({
+        id: Object.keys(this.notificationSettings).length + 1,
+        userId,
+        type,
+        email: true,
+        push: true,
+        inApp: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+      
+      this.notificationSettings.set(userId, settings);
+    }
+    
+    return settings;
+  }
+
+  async updateNotificationSetting(userId: string, type: string, updates: {
+    email?: boolean;
+    push?: boolean;
+    inApp?: boolean;
+  }): Promise<NotificationSettings> {
+    const settings = await this.getUserNotificationSettings(userId);
+    let setting = settings.find(s => s.type === type);
+    
+    if (!setting) {
+      // Create new setting
+      setting = {
+        id: Object.keys(this.notificationSettings).length + 1,
+        userId,
+        type,
+        email: updates.email ?? true,
+        push: updates.push ?? true,
+        inApp: updates.inApp ?? true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      settings.push(setting);
+    } else {
+      // Update existing setting
+      Object.assign(setting, updates, { updatedAt: new Date() });
+    }
+    
+    this.notificationSettings.set(userId, settings);
+    return setting;
+  }
+
+  // Push notifications
+  async createPushSubscription(subscription: InsertPushSubscription): Promise<PushSubscription> {
+    // Check if subscription already exists
+    const existing = Array.from(this.pushSubscriptions.values())
+      .find(s => s.userId === subscription.userId && s.endpoint === subscription.endpoint);
+    
+    if (existing) {
+      existing.isActive = true;
+      existing.lastUsed = new Date();
+      return existing;
+    }
+
+    const newSubscription: PushSubscription = {
+      id: this.pushSubscriptionIdCounter++,
+      ...subscription,
+      isActive: true,
+      createdAt: new Date(),
+      lastUsed: new Date(),
+    };
+    this.pushSubscriptions.set(newSubscription.id, newSubscription);
+    return newSubscription;
+  }
+
+  async deletePushSubscription(userId: string, endpoint: string): Promise<void> {
+    const subscription = Array.from(this.pushSubscriptions.values())
+      .find(s => s.userId === userId && s.endpoint === endpoint);
+    
+    if (subscription) {
+      this.pushSubscriptions.delete(subscription.id);
+    }
+  }
+
+  async getUserPushSubscriptions(userId: string): Promise<PushSubscription[]> {
+    return Array.from(this.pushSubscriptions.values())
+      .filter(subscription => subscription.userId === userId && subscription.isActive);
+  }
+
+  async sendPushNotification(userId: string, notification: {
+    title: string;
+    body: string;
+    icon?: string;
+    badge?: string;
+    data?: any;
+  }): Promise<void> {
+    // In a real implementation, this would use web-push library
+    const subscriptions = await this.getUserPushSubscriptions(userId);
+    
+    if (subscriptions.length > 0) {
+      console.log(`[PUSH] Sending notification to ${subscriptions.length} subscription(s) for user ${userId}:`, {
+        title: notification.title,
+        body: notification.body,
+        data: notification.data,
+      });
+      
+      // Update last used timestamp for subscriptions
+      subscriptions.forEach(sub => {
+        sub.lastUsed = new Date();
+      });
+    }
+  }
 }
