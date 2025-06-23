@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const membership = await storage.getUserClanMembership(userId);
       
       if (!membership) {
-        return res.status(404).json({ message: "No clan membership found" });
+        return res.json(null);
       }
       
       res.json(membership);
@@ -1143,9 +1143,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/users/games', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Ensure user exists
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email,
+          firstName: req.user.claims.first_name,
+          lastName: req.user.claims.last_name,
+          profileImageUrl: req.user.claims.profile_image_url,
+        });
+      }
+      
       const games = await storage.getUserGameLibrary(userId);
       res.json(games);
     } catch (error) {
+      console.error("Error fetching game library:", error);
       res.status(500).json({ message: "Failed to fetch game library" });
     }
   });
@@ -1239,6 +1253,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admin stats:", error);
       res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  // Seed route for development
+  app.post('/api/seed', async (req, res) => {
+    try {
+      const { quickSeed } = await import('./quick-seed');
+      const success = await quickSeed(storage);
+      if (success) {
+        res.json({ message: "Database seeded successfully" });
+      } else {
+        res.status(500).json({ message: "Seeding partially failed" });
+      }
+    } catch (error) {
+      console.error("Seeding error:", error);
+      res.status(500).json({ message: "Failed to seed database" });
     }
   });
 

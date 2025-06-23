@@ -21,6 +21,7 @@ export default function Home() {
   const { data: posts, isLoading: postsLoading, error } = useQuery({
     queryKey: ['/api/posts'],
     retry: false,
+    staleTime: 30000,
   });
 
   // Limit posts for guests

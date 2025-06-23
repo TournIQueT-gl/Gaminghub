@@ -723,7 +723,7 @@ export const insertTournamentSchema = createInsertSchema(tournaments).omit({
   currentParticipants: true,
   createdAt: true,
 }).extend({
-  startDate: z.string().datetime().or(z.date()),
+  startDate: z.string().datetime().or(z.date()).optional(),
   endDate: z.string().datetime().or(z.date()).optional(),
 });
 
