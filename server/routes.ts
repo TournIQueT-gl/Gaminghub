@@ -295,6 +295,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user social links
+  app.patch('/api/users/social-links', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { socialLinks } = req.body;
+      
+      // Get current user
+      let currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        // Auto-create user if they don't exist
+        currentUser = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email,
+          firstName: req.user.claims.first_name,
+          lastName: req.user.claims.last_name,
+          profileImageUrl: req.user.claims.profile_image_url,
+        });
+      }
+      
+      // Update user with social links
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        socialLinks: socialLinks,
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating social links:", error);
+      res.status(500).json({ message: "Failed to update social links" });
+    }
+  });
+
   // Get user analytics (profile owner only)
   app.get('/api/users/:id/analytics', isAuthenticated, async (req: any, res) => {
     try {

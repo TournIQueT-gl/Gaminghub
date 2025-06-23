@@ -8,6 +8,12 @@ import PostCard from "@/components/post-card";
 import AchievementCard from "@/components/achievement-card";
 import GameStatsCard from "@/components/game-stats-card";
 import ProfileCompletion from "@/components/profile-completion";
+import ProfileAvatarUpload from "@/components/profile-avatar-upload";
+import ProfileSettingsModal from "@/components/profile-settings-modal";
+import ProfileSocialLinks from "@/components/profile-social-links";
+import ProfileActivityFeed from "@/components/profile-activity-feed";
+import ProfileStatsDashboard from "@/components/profile-stats-dashboard";
+import ProfileFollowersModal from "@/components/profile-followers-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,6 +88,9 @@ export default function ProfileNew() {
   const isOwnProfile = !targetUserId || targetUserId === user?.id;
 
   const [editMode, setEditMode] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [followersModalOpen, setFollowersModalOpen] = useState(false);
+  const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>('followers');
   const [profileData, setProfileData] = useState({
     username: '',
     bio: '',
@@ -322,25 +331,16 @@ export default function ProfileNew() {
               <CardContent className="pt-0 pb-6">
                 <div className="flex flex-col lg:flex-row items-start gap-6 -mt-16">
                   {/* Profile Picture */}
-                  <div className="relative flex-shrink-0">
-                    <Avatar className="w-32 h-32 border-4 border-gaming-card shadow-xl">
-                      <AvatarImage src={displayUser?.profileImage} />
-                      <AvatarFallback className="bg-gaming-darker text-white text-4xl">
-                        {displayUser?.username?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    {isOwnProfile && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="absolute -bottom-2 -right-2 w-10 h-10 bg-gaming-purple hover:bg-purple-600 text-white rounded-full shadow-lg"
-                      >
-                        <Camera className="w-5 h-5" />
-                      </Button>
-                    )}
-                    {/* Online Status */}
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-gaming-emerald rounded-full border-4 border-gaming-card"></div>
-                  </div>
+                  <ProfileAvatarUpload
+                    currentImage={displayUser?.profileImageUrl}
+                    username={displayUser?.username}
+                    editable={isOwnProfile}
+                    onImageUpdate={(imageUrl) => {
+                      if (isOwnProfile) {
+                        updateProfileMutation.mutate({ profileImageUrl: imageUrl });
+                      }
+                    }}
+                  />
 
                   {/* Profile Info */}
                   <div className="flex-1 space-y-4">
@@ -402,14 +402,15 @@ export default function ProfileNew() {
                               className="border-gaming-card-hover bg-gaming-darker text-white hover:bg-gaming-card"
                             >
                               <Edit className="w-4 h-4 mr-2" />
-                              {editMode ? 'Cancel' : 'Edit Profile'}
+                              {editMode ? 'Cancel' : 'Quick Edit'}
                             </Button>
-                            <Link href="/settings">
-                              <Button className="bg-gaming-purple hover:bg-purple-600">
-                                <Settings className="w-4 h-4 mr-2" />
-                                Settings
-                              </Button>
-                            </Link>
+                            <Button 
+                              onClick={() => setSettingsModalOpen(true)}
+                              className="bg-gaming-purple hover:bg-purple-600"
+                            >
+                              <Settings className="w-4 h-4 mr-2" />
+                              Settings
+                            </Button>
                           </>
                         ) : (
                           <>
@@ -454,19 +455,31 @@ export default function ProfileNew() {
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="text-center p-3 bg-gaming-darker rounded-lg">
+                      <div className="text-center p-3 bg-gaming-darker rounded-lg hover:bg-gaming-card-hover transition-colors cursor-pointer">
                         <div className="text-2xl font-bold text-gaming-blue">{displayStats.postsCount || 0}</div>
                         <div className="text-xs text-gaming-text-dim">Posts</div>
                       </div>
-                      <div className="text-center p-3 bg-gaming-darker rounded-lg">
+                      <div 
+                        className="text-center p-3 bg-gaming-darker rounded-lg hover:bg-gaming-card-hover transition-colors cursor-pointer"
+                        onClick={() => {
+                          setFollowersModalTab('followers');
+                          setFollowersModalOpen(true);
+                        }}
+                      >
                         <div className="text-2xl font-bold text-gaming-purple">{displayStats.followersCount || 0}</div>
                         <div className="text-xs text-gaming-text-dim">Followers</div>
                       </div>
-                      <div className="text-center p-3 bg-gaming-darker rounded-lg">
+                      <div 
+                        className="text-center p-3 bg-gaming-darker rounded-lg hover:bg-gaming-card-hover transition-colors cursor-pointer"
+                        onClick={() => {
+                          setFollowersModalTab('following');
+                          setFollowersModalOpen(true);
+                        }}
+                      >
                         <div className="text-2xl font-bold text-gaming-emerald">{displayStats.followingCount || 0}</div>
                         <div className="text-xs text-gaming-text-dim">Following</div>
                       </div>
-                      <div className="text-center p-3 bg-gaming-darker rounded-lg">
+                      <div className="text-center p-3 bg-gaming-darker rounded-lg hover:bg-gaming-card-hover transition-colors cursor-pointer">
                         <div className="text-2xl font-bold text-gaming-gold">{achievements?.filter((a: Achievement) => a.unlockedAt).length || 0}</div>
                         <div className="text-xs text-gaming-text-dim">Achievements</div>
                       </div>
@@ -618,6 +631,37 @@ export default function ProfileNew() {
               </Card>
             )}
 
+            {/* Social Links */}
+            <ProfileSocialLinks 
+              userId={profileUserId!}
+              socialLinks={displayUser?.socialLinks || []}
+              editable={isOwnProfile}
+            />
+
+            {/* Enhanced Stats Dashboard */}
+            <ProfileStatsDashboard 
+              userId={profileUserId!}
+              userStats={displayStats}
+              isOwnProfile={isOwnProfile}
+            />
+
+            {/* Profile Settings Modal */}
+            {isOwnProfile && (
+              <ProfileSettingsModal
+                open={settingsModalOpen}
+                onOpenChange={setSettingsModalOpen}
+                user={displayUser}
+              />
+            )}
+
+            {/* Followers Modal */}
+            <ProfileFollowersModal
+              open={followersModalOpen}
+              onOpenChange={setFollowersModalOpen}
+              userId={profileUserId!}
+              initialTab={followersModalTab}
+            />
+
             {/* Profile Content Tabs */}
             <Tabs defaultValue="posts" className="space-y-6">
               <TabsList className="bg-gaming-darker border-gaming-card-hover">
@@ -711,14 +755,7 @@ export default function ProfileNew() {
               </TabsContent>
 
               <TabsContent value="activity" className="space-y-4">
-                <Card className="bg-gaming-card border-gaming-card-hover">
-                  <CardContent className="p-8">
-                    <div className="text-center">
-                      <Zap className="w-12 h-12 text-gaming-text-dim mx-auto mb-2" />
-                      <p className="text-gaming-text-dim">Activity feed coming soon</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ProfileActivityFeed userId={profileUserId!} isOwnProfile={isOwnProfile} />
               </TabsContent>
 
               {isOwnProfile && (

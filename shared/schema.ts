@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   location: varchar("location"),
   website: varchar("website"),
   favoriteGames: text("favorite_games").array(),
+  socialLinks: jsonb("social_links").default('[]'),
   level: integer("level").default(1),
   xp: integer("xp").default(0),
   role: varchar("role").default("user"), // user, mod, admin
