@@ -241,6 +241,153 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   lastUsed: timestamp("last_used").defaultNow(),
 });
 
+// Live streaming tables
+export const streams = pgTable("streams", {
+  id: serial("id").primaryKey(),
+  streamerId: varchar("streamer_id").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  game: varchar("game"),
+  category: varchar("category").default("gaming"), // "gaming", "just_chatting", "music", "art", etc.
+  thumbnailUrl: varchar("thumbnail_url"),
+  streamKey: varchar("stream_key").notNull().unique(),
+  status: varchar("status").default("offline"), // "offline", "live", "starting", "ending"
+  viewerCount: integer("viewer_count").default(0),
+  maxViewers: integer("max_viewers").default(0),
+  isPublic: boolean("is_public").default(true),
+  isMature: boolean("is_mature").default(false),
+  allowChat: boolean("allow_chat").default(true),
+  allowDonations: boolean("allow_donations").default(true),
+  streamUrl: varchar("stream_url"), // RTMP/HLS stream URL
+  playbackUrl: varchar("playback_url"), // Viewer playback URL
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration"), // in minutes
+  totalViews: integer("total_views").default(0),
+  peakViewers: integer("peak_viewers").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const streamFollows = pgTable("stream_follows", {
+  id: serial("id").primaryKey(),
+  followerId: varchar("follower_id").notNull().references(() => users.id),
+  streamerId: varchar("streamer_id").notNull().references(() => users.id),
+  notifyOnLive: boolean("notify_on_live").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const streamChats = pgTable("stream_chats", {
+  id: serial("id").primaryKey(),
+  streamId: integer("stream_id").notNull().references(() => streams.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  messageType: varchar("message_type").default("chat"), // "chat", "donation", "follow", "subscription"
+  donationAmount: decimal("donation_amount", { precision: 10, scale: 2 }),
+  currency: varchar("currency").default("USD"),
+  isDeleted: boolean("is_deleted").default(false),
+  isModerated: boolean("is_moderated").default(false),
+  moderatedBy: varchar("moderated_by").references(() => users.id),
+  moderatedAt: timestamp("moderated_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const streamModerators = pgTable("stream_moderators", {
+  id: serial("id").primaryKey(),
+  streamerId: varchar("streamer_id").notNull().references(() => users.id),
+  moderatorId: varchar("moderator_id").notNull().references(() => users.id),
+  permissions: jsonb("permissions"), // array of permissions like "ban", "timeout", "delete_messages"
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const streamHighlights = pgTable("stream_highlights", {
+  id: serial("id").primaryKey(),
+  streamId: integer("stream_id").notNull().references(() => streams.id),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  startTime: integer("start_time").notNull(), // seconds from stream start
+  endTime: integer("end_time").notNull(), // seconds from stream start
+  duration: integer("duration").notNull(), // in seconds
+  thumbnailUrl: varchar("thumbnail_url"),
+  videoUrl: varchar("video_url"),
+  viewCount: integer("view_count").default(0),
+  likeCount: integer("like_count").default(0),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const streamDonations = pgTable("stream_donations", {
+  id: serial("id").primaryKey(),
+  streamId: integer("stream_id").notNull().references(() => streams.id),
+  donorId: varchar("donor_id").references(() => users.id), // null for anonymous donations
+  donorName: varchar("donor_name"), // for anonymous donations
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency").default("USD"),
+  message: text("message"),
+  isAnonymous: boolean("is_anonymous").default(false),
+  isRefunded: boolean("is_refunded").default(false),
+  refundedAt: timestamp("refunded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Content creation tables
+export const contentPieces = pgTable("content_pieces", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  type: varchar("type").notNull(), // "video", "clip", "screenshot", "guide", "review"
+  title: varchar("title").notNull(),
+  description: text("description"),
+  content: text("content"), // for text-based content like guides
+  mediaUrl: varchar("media_url"), // video/image URL
+  thumbnailUrl: varchar("thumbnail_url"),
+  game: varchar("game"),
+  tags: text("tags").array(), // array of tags
+  duration: integer("duration"), // for videos, in seconds
+  fileSize: bigint("file_size", { mode: "number" }), // in bytes
+  resolution: varchar("resolution"), // "1080p", "720p", etc.
+  fps: integer("fps"), // frames per second for videos
+  status: varchar("status").default("published"), // "draft", "processing", "published", "archived"
+  visibility: varchar("visibility").default("public"), // "public", "unlisted", "private"
+  isFeatured: boolean("is_featured").default(false),
+  viewCount: integer("view_count").default(0),
+  likeCount: integer("like_count").default(0),
+  downloadCount: integer("download_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const contentCategories = pgTable("content_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull().unique(),
+  description: text("description"),
+  iconUrl: varchar("icon_url"),
+  color: varchar("color"), // hex color code
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const contentLikes = pgTable("content_likes", {
+  id: serial("id").primaryKey(),
+  contentId: integer("content_id").notNull().references(() => contentPieces.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const contentViews = pgTable("content_views", {
+  id: serial("id").primaryKey(),
+  contentId: integer("content_id").notNull().references(() => contentPieces.id),
+  userId: varchar("user_id").references(() => users.id), // null for anonymous views
+  watchTime: integer("watch_time"), // in seconds
+  isCompleted: boolean("is_completed").default(false),
+  referrer: varchar("referrer"), // where they came from
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Follows table (user following system)
 export const follows = pgTable("follows", {
   id: serial("id").primaryKey(),

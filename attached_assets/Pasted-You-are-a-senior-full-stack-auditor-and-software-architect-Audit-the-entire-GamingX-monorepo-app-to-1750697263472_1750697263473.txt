@@ -1,0 +1,81 @@
+You are a senior full-stack auditor and software architect. Audit the entire GamingX monorepo app to ensure it is production-ready, clean, complete, and secure.
+
+Architecture:
+- Frontend: Next.js + TailwindCSS
+- Backend: NestJS + Prisma + PostgreSQL
+- Real-time: Socket.IO
+- AI: OpenAI integration
+- Auth: JWT + Google/GitHub OAuth
+- Repo structure: /apps/frontend, /apps/backend, /prisma, /libs/shared
+
+Perform a complete technical audit. Do the following:
+
+---
+
+1. 🔐 **Authentication & Security**
+- Validate the full JWT + OAuth flow
+- Check for missing route guards
+- Ensure refresh tokens rotate and expire correctly
+- Ensure role-based access control works (admin/mod/user)
+
+2. 🎯 **API Audit (Backend/NestJS)**
+- Audit all routes in modules: Auth, Users, Posts, Clans, Chat, Tournaments
+- Ensure proper use of DTOs and ValidationPipe
+- Check for unhandled errors, missing try/catch
+- Confirm consistent use of status codes and response types
+- Check for overexposed or duplicate endpoints
+- Swagger decorators applied? (for public APIs)
+
+3. 🧠 **Prisma Schema Audit**
+- Validate model relations (1:1, 1:N, M:N)
+- Ensure `@relation` directives are properly used
+- Check for missing indexes, unique constraints
+- Identify unused models or fields
+- Validate enum usage for roles, status, etc.
+
+4. 🌐 **Frontend Audit (Next.js)**
+- Check all major pages:
+  - /feed, /profile, /clans, /tournaments, /chat, /admin
+- Validate:
+  - Auth handling in protected routes
+  - Proper form validation and feedback
+  - Responsive layout (Tailwind)
+  - Error/loading states on API calls
+  - Socket.IO client-side logic
+- Confirm data is correctly displayed (user XP, clan info, match results, etc.)
+
+5. 📡 **Real-time Systems**
+- Validate Socket.IO Gateway setup on backend
+- Ensure events are scoped by user or room
+- Check message typing, read receipts, live bracket updates
+- Confirm events are handled correctly in frontend hooks
+
+6. 🔍 **Search & Filtering**
+- Test and verify the global search endpoint (users, clans, tournaments)
+- Confirm LIKE or full-text search works
+- Pagination & debounce logic present?
+
+7. 🛠️ **Environment & Dev Experience**
+- Check that `.env.example` contains all needed keys
+- Validate dev scripts in package.json (`dev:backend`, `dev:frontend`, `build`, `prisma:seed`)
+- Check README setup instructions
+- Ensure all Replit configurations are correct for dev/deploy
+
+8. 🔔 **Notifications**
+- Audit how real-time + DB-stored notifications work
+- Check events: like, comment, follow, join tournament, new message
+- Verify frontend rendering (dropdown, badge, etc.)
+
+9. 🧪 **Seeders + Testing**
+- Validate that seeding with Faker works correctly
+- Ensure seeded tournaments, clans, posts, users are linked logically
+- Check for basic E2E tests or test coverage on main modules
+
+---
+
+💡 For every broken or incomplete part:
+- Fix it directly or clearly mark `// TODO: FIX`
+- Return modified files only
+- Don’t delete existing working files
+
+Output only relevant, changed, or missing files — don’t explain anything. Be precise, surgical, and efficient.
