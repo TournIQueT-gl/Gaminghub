@@ -11,44 +11,20 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
+import { checkGuestLimitation, GUEST_LIMITATIONS } from "@/lib/authUtils";
+import GuestLimitationBanner from "@/components/guest-limitation-banner";
 
 export default function Home() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   const { data: posts, isLoading: postsLoading, error } = useQuery({
     queryKey: ['/api/posts'],
     retry: false,
   });
 
-  useEffect(() => {
-    if (error && isUnauthorizedError(error as Error)) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-    }
-  }, [error, toast]);
+  // Limit posts for guests
+  const displayPosts = isGuest && posts ? posts.slice(0, GUEST_LIMITATIONS.maxViewableItems) : posts;
 
   if (isLoading) {
     return <LoadingPage text="Loading GamingX..." />;

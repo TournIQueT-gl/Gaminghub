@@ -642,7 +642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Post routes
+  // Post routes - Allow guests with limitations
   app.get('/api/posts', async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;

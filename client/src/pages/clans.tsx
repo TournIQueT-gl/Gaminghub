@@ -11,44 +11,21 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { isUnauthorizedError } from "@/lib/authUtils";
+import { checkGuestLimitation, GUEST_LIMITATIONS } from "@/lib/authUtils";
+import GuestLimitationBanner from "@/components/guest-limitation-banner";
 import { Shield, Users, Crown, Star, TrendingUp } from "lucide-react";
 
 export default function Clans() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   const { data: clans, isLoading: clansLoading, error } = useQuery({
     queryKey: ['/api/clans'],
     retry: false,
   });
 
-  useEffect(() => {
-    if (error && isUnauthorizedError(error as Error)) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-    }
-  }, [error, toast]);
+  // Limit clans for guests
+  const displayClans = isGuest && clans ? clans.slice(0, GUEST_LIMITATIONS.maxViewableItems) : clans;
 
   const joinClanMutation = useMutation({
     mutationFn: async ({ clanId }: { clanId: number }) => {
@@ -169,8 +146,16 @@ export default function Clans() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">Clan Leaderboard</h2>
-                <CreateClanForm />
+                {isAuthenticated && <CreateClanForm />}
               </div>
+              
+              {/* Guest Banner */}
+              {isGuest && (
+                <GuestLimitationBanner 
+                  message="Viewing in guest mode - limited to 10 clans"
+                  feature="full clan access"
+                />
+              )}
               
               {clansLoading ? (
                 <div className="grid gap-6">
@@ -185,9 +170,9 @@ export default function Clans() {
                     </Card>
                   ))}
                 </div>
-              ) : clans && clans.length > 0 ? (
+              ) : displayClans && displayClans.length > 0 ? (
                 <div className="grid gap-4">
-                  {clans.map((clan: any, index: number) => (
+                  {displayClans.map((clan: any, index: number) => (
                     <Card key={clan.id} className="bg-gaming-card border-gaming-card-hover hover:border-gaming-purple/30 transition-colors">
                       <CardHeader>
                         <div className="flex items-center justify-between">
@@ -235,7 +220,17 @@ export default function Clans() {
                           
                           {clan.isPublic && (
                             <Button
-                              onClick={() => joinClanMutation.mutate({ clanId: clan.id })}
+                              onClick={() => {
+        if (!checkGuestLimitation('canJoinClans', isAuthenticated)) {
+          toast({
+            title: "Sign in required",
+            description: "Sign in to join clans",
+            variant: "destructive",
+          });
+          return;
+        }
+        joinClanMutation.mutate({ clanId: clan.id });
+      }}
                               disabled={joinClanMutation.isPending}
                               className="bg-gaming-blue hover:bg-blue-600"
                             >

@@ -17,7 +17,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { isUnauthorizedError } from "@/lib/authUtils";
+import { checkGuestLimitation } from "@/lib/authUtils";
 import { 
   User, 
   Trophy, 
@@ -92,7 +92,7 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
+      if (error.message.includes("401")) {
         toast({
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",

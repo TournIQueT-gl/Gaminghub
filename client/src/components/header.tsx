@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export default function Header({ title }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, login } = useAuth();
 
   return (
     <header className="bg-gaming-darker border-b border-gaming-card p-4 sticky top-0 z-20">
@@ -39,15 +39,16 @@ export default function Header({ title }: HeaderProps) {
           <NotificationBell />
 
           {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gaming-card">
-                <img 
-                  src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"} 
-                  alt="User menu" 
-                  className="w-8 h-8 rounded-lg object-cover"
-                />
-                <ChevronDown className="w-4 h-4" />
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gaming-card">
+                  <img 
+                    src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"} 
+                    alt="User menu" 
+                    className="w-8 h-8 rounded-lg object-cover"
+                  />
+                  <ChevronDown className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-gaming-card border-gaming-card-hover">
@@ -73,6 +74,14 @@ export default function Header({ title }: HeaderProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          ) : (
+            <Button 
+              onClick={login}
+              className="bg-gradient-to-r from-gaming-blue to-gaming-purple hover:from-gaming-blue/80 hover:to-gaming-purple/80"
+            >
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
     </header>

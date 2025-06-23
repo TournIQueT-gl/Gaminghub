@@ -33,7 +33,7 @@ interface PostCardProps {
 export default function PostCard({ post }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   const { data: comments } = useQuery({
@@ -174,7 +174,17 @@ export default function PostCard({ post }: PostCardProps) {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => likeMutation.mutate()}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  toast({
+                    title: "Sign in required",
+                    description: "Sign in to like posts",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                likeMutation.mutate();
+              }}
               disabled={likeMutation.isPending}
               className="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-red transition-colors"
             >
@@ -184,7 +194,17 @@ export default function PostCard({ post }: PostCardProps) {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => setShowComments(!showComments)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  toast({
+                    title: "Sign in required",
+                    description: "Sign in to view comments",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                setShowComments(!showComments);
+              }}
               className="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-blue transition-colors"
             >
               <MessageCircle className="w-4 h-4" />

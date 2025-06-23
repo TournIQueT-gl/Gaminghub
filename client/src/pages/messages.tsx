@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
+import GuestFeatureGuard from "@/components/guest-feature-guard";
 import { Send, Users, MessageCircle, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -30,6 +30,27 @@ interface ChatMessage {
 }
 
 export default function Messages() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  // Redirect guests - Messages are authenticated-only
+  if (!isLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gaming-dark text-gaming-text">
+        <div className="flex">
+          <Sidebar />
+          <div className="flex-1 ml-64">
+            <Header title="Messages" />
+            <div className="p-6">
+              <GuestFeatureGuard feature="send messages">
+                <div>This should not show</div>
+              </GuestFeatureGuard>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [selectedRoom, setSelectedRoom] = useState<string>('global');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -47,7 +68,6 @@ export default function Messages() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected, sendMessage, joinRoom, leaveRoom } = useWebSocket();
-  const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {

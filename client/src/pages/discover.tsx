@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 
 export default function Discover() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isGuest } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [gameFilter, setGameFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");

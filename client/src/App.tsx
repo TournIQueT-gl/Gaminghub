@@ -25,30 +25,34 @@ function Router() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gaming-dark flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="flex items-center space-x-2">
+          <div className="w-6 h-6 border-2 border-gaming-blue border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-white">Loading GamingX...</span>
+        </div>
       </div>
     );
   }
 
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
+      <Route path="/" component={isAuthenticated ? Home : Landing} />
+      <Route path="/tournaments" component={Tournaments} />
+      <Route path="/clans" component={Clans} />
+      <Route path="/clan/:id" component={ClanDetails} />
+      <Route path="/discover" component={Discover} />
+      <Route path="/gaming" component={Gaming} />
+      <Route path="/content" component={Content} />
+      <Route path="/streaming" component={Streaming} />
+      <Route path="/profile/:userId?" component={ProfileNew} />
+      
+      {/* Authenticated-only routes */}
+      {isAuthenticated && (
         <>
-          <Route path="/" component={Home} />
-          <Route path="/tournaments" component={Tournaments} />
-          <Route path="/clans" component={Clans} />
-          <Route path="/clan/:id" component={ClanDetails} />
           <Route path="/messages" component={Messages} />
-          <Route path="/discover" component={Discover} />
-          <Route path="/gaming" component={Gaming} />
-          <Route path="/content" component={Content} />
-          <Route path="/streaming" component={Streaming} />
-          <Route path="/profile/:userId?" component={ProfileNew} />
           <Route path="/settings" component={Settings} />
         </>
       )}
+      
       <Route component={NotFound} />
     </Switch>
   );

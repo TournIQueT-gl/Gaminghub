@@ -7,12 +7,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { isUnauthorizedError } from "@/lib/authUtils";
+import { checkGuestLimitation } from "@/lib/authUtils";
 
 export default function CreatePost() {
   const [content, setContent] = useState("");
   const [gameTag, setGameTag] = useState("");
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   const createPostMutation = useMutation({
@@ -29,17 +29,6 @@ export default function CreatePost() {
       queryClient.invalidateQueries({ queryKey: ['/api/posts'] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to create post",
@@ -71,7 +60,23 @@ export default function CreatePost() {
   });
 
   const handleSubmit = () => {
-    if (!content.trim()) return;
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to create posts",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!content.trim()) {
+      toast({
+        title: "Error",
+        description: "Post content cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
     
     createPostMutation.mutate({
       content: content.trim(),

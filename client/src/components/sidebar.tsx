@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function Sidebar() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
 
   const { data: clanMembership } = useQuery({
     queryKey: ['/api/users/clan-membership'],
@@ -15,11 +15,15 @@ export default function Sidebar() {
 
   const navItems = [
     { icon: Home, label: "Feed", path: "/", active: location === "/" },
-    { icon: Trophy, label: "Tournaments", path: "/tournaments", active: location === "/tournaments", badge: "3" },
+    { icon: Trophy, label: "Tournaments", path: "/tournaments", active: location === "/tournaments" },
     { icon: Users, label: "Clans", path: "/clans", active: location === "/clans" },
-    { icon: MessageCircle, label: "Messages", path: "/messages", active: location === "/messages", badge: "12" },
-    { icon: User, label: "Profile", path: "/profile", active: location.startsWith("/profile") },
-    { icon: Settings, label: "Settings", path: "/settings", active: location === "/settings" },
+    { icon: Compass, label: "Discover", path: "/discover", active: location === "/discover" },
+    { icon: Gamepad2, label: "Gaming", path: "/gaming", active: location === "/gaming" },
+    ...(isAuthenticated ? [
+      { icon: MessageCircle, label: "Messages", path: "/messages", active: location === "/messages" },
+      { icon: User, label: "Profile", path: "/profile", active: location.startsWith("/profile") },
+      { icon: Settings, label: "Settings", path: "/settings", active: location === "/settings" },
+    ] : [])
   ];
 
   return (
@@ -41,27 +45,43 @@ export default function Sidebar() {
 
       {/* User Profile Section */}
       <div className="p-4 border-b border-gaming-card">
-        <div className="flex items-center space-x-3">
-          <img 
-            src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
-            alt="User avatar" 
-            className="w-12 h-12 rounded-lg object-cover border-2 border-gaming-blue"
-          />
-          <div>
-            <h3 className="font-semibold text-white">{user?.username || user?.firstName || 'Gamer'}</h3>
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 bg-gaming-emerald rounded-full"></div>
-              <span className="text-xs text-gaming-text-dim">Online</span>
-            </div>
-            <div className="flex items-center space-x-1 mt-1">
-              <span className="text-xs text-gaming-text-dim">Level</span>
-              <span className="text-xs font-mono text-gaming-blue">{user?.level || 1}</span>
-              <div className="flex-1 bg-gaming-card rounded-full h-1 ml-2">
-                <div className="bg-gaming-blue h-1 rounded-full w-3/4"></div>
+        {isAuthenticated ? (
+          <div className="flex items-center space-x-3">
+            <img 
+              src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"} 
+              alt="User avatar" 
+              className="w-12 h-12 rounded-lg object-cover border-2 border-gaming-blue"
+            />
+            <div>
+              <h3 className="font-semibold text-white">{user?.username || user?.firstName || 'Gamer'}</h3>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-gaming-emerald rounded-full"></div>
+                <span className="text-xs text-gaming-text-dim">Online</span>
+              </div>
+              <div className="flex items-center space-x-1 mt-1">
+                <span className="text-xs text-gaming-text-dim">Level</span>
+                <span className="text-xs font-mono text-gaming-blue">{user?.level || 1}</span>
+                <div className="flex-1 bg-gaming-card rounded-full h-1 ml-2">
+                  <div className="bg-gaming-blue h-1 rounded-full w-3/4"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gaming-blue/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+              <User className="w-6 h-6 text-gaming-blue" />
+            </div>
+            <h3 className="font-semibold text-white mb-1">Guest Mode</h3>
+            <p className="text-xs text-gaming-text-dim mb-3">Limited access - Sign in to unlock all features</p>
+            <button 
+              onClick={login}
+              className="w-full bg-gradient-to-r from-gaming-blue to-gaming-purple text-white py-2 px-4 rounded-lg text-sm font-medium hover:from-gaming-blue/80 hover:to-gaming-purple/80 transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Navigation Menu */}
