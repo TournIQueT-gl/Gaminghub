@@ -1,14 +1,16 @@
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 
 interface HeaderProps {
   title: string;
 }
 
 export default function Header({ title }: HeaderProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <header className="bg-gaming-darker border-b border-gaming-card p-4 sticky top-0 z-20">
@@ -41,14 +43,40 @@ export default function Header({ title }: HeaderProps) {
           </Button>
 
           {/* User Menu */}
-          <Button variant="ghost" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gaming-card">
-            <img 
-              src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"} 
-              alt="User menu" 
-              className="w-8 h-8 rounded-lg object-cover"
-            />
-            <ChevronDown className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gaming-card">
+                <img 
+                  src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40"} 
+                  alt="User menu" 
+                  className="w-8 h-8 rounded-lg object-cover"
+                />
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-gaming-card border-gaming-card-hover">
+              <Link href="/profile">
+                <DropdownMenuItem className="text-white hover:bg-gaming-card-hover">
+                  <User className="w-4 h-4 mr-2" />
+                  View Profile
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/settings">
+                <DropdownMenuItem className="text-white hover:bg-gaming-card-hover">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator className="border-gaming-card-hover" />
+              <DropdownMenuItem 
+                onClick={() => logout()}
+                className="text-red-400 hover:bg-gaming-card-hover"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

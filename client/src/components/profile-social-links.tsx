@@ -94,6 +94,10 @@ export default function ProfileSocialLinks({ userId, socialLinks = [], editable 
   const updateSocialLinksMutation = useMutation({
     mutationFn: async (data: { socialLinks: SocialLink[] }) => {
       const response = await apiRequest('PATCH', '/api/users/social-links', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update social links');
+      }
       return response.json();
     },
     onSuccess: () => {

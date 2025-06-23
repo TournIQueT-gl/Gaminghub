@@ -69,6 +69,10 @@ export default function ProfileSettingsModal({ open, onOpenChange, user }: Profi
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('PATCH', '/api/users/profile', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
       return response.json();
     },
     onSuccess: () => {

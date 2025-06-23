@@ -123,7 +123,7 @@ export default function ProfileAvatarUpload({
       )}
 
       {/* Online Status Indicator */}
-      <div className="absolute top-2 right-2 w-6 h-6 bg-gaming-emerald rounded-full border-4 border-gaming-card"></div>
+      <div className="absolute top-0 right-0 w-6 h-6 bg-gaming-emerald rounded-full border-4 border-gaming-card shadow-lg"></div>
     </div>
   );
 }

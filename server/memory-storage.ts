@@ -71,6 +71,7 @@ export class MemoryStorage implements IStorage {
       xp: userData.xp !== undefined ? userData.xp : existing?.xp || 0,
       role: userData.role !== undefined ? userData.role : existing?.role || "user",
       isVerified: userData.isVerified !== undefined ? userData.isVerified : existing?.isVerified || false,
+      socialLinks: userData.socialLinks !== undefined ? userData.socialLinks : existing?.socialLinks || [],
       createdAt: existing?.createdAt || userData.createdAt || new Date(),
       updatedAt: new Date(),
     };

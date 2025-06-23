@@ -160,15 +160,25 @@ export default function ProfileNew() {
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('PATCH', '/api/users/profile', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Success",
         description: "Profile updated successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/auth/user`, profileUserId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/auth/user`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${profileUserId}/stats`] });
       setEditMode(false);
+      
+      // Update profile data state with response
+      if (data) {
+        setProfileData(prev => ({ ...prev, ...data }));
+      }
     },
     onError: (error: Error) => {
       toast({

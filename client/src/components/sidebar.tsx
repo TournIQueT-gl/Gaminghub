@@ -18,7 +18,7 @@ export default function Sidebar() {
     { icon: Trophy, label: "Tournaments", path: "/tournaments", active: location === "/tournaments", badge: "3" },
     { icon: Users, label: "Clans", path: "/clans", active: location === "/clans" },
     { icon: MessageCircle, label: "Messages", path: "/messages", active: location === "/messages", badge: "12" },
-    { icon: User, label: "Profile", path: "/profile", active: location === "/profile" },
+    { icon: User, label: "Profile", path: "/profile", active: location.startsWith("/profile") },
     { icon: Settings, label: "Settings", path: "/settings", active: location === "/settings" },
   ];
 
