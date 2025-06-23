@@ -481,12 +481,12 @@ export default function Gaming() {
                     />
                   </div>
 
-                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                  <Select value={platformFilter || "all"} onValueChange={(value) => setPlatformFilter(value === "all" ? "" : value)}>
                     <SelectTrigger className="w-48 bg-gaming-darker border-gaming-card-hover text-white">
                       <SelectValue placeholder="Filter by platform" />
                     </SelectTrigger>
                     <SelectContent className="bg-gaming-card border-gaming-card-hover">
-                      <SelectItem value="">All Platforms</SelectItem>
+                      <SelectItem value="all">All Platforms</SelectItem>
                       <SelectItem value="pc">PC</SelectItem>
                       <SelectItem value="xbox">Xbox</SelectItem>
                       <SelectItem value="playstation">PlayStation</SelectItem>

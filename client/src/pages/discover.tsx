@@ -307,12 +307,12 @@ export default function Discover() {
               <TabsContent value="discover" className="space-y-6">
                 {/* Filters */}
                 <div className="flex gap-4 flex-wrap">
-                  <Select value={gameFilter} onValueChange={setGameFilter}>
+                  <Select value={gameFilter || "all"} onValueChange={(value) => setGameFilter(value === "all" ? "" : value)}>
                     <SelectTrigger className="w-48 bg-gaming-darker border-gaming-card-hover text-white">
                       <SelectValue placeholder="Filter by game" />
                     </SelectTrigger>
                     <SelectContent className="bg-gaming-card border-gaming-card-hover">
-                      <SelectItem value="">All Games</SelectItem>
+                      <SelectItem value="all">All Games</SelectItem>
                       <SelectItem value="Valorant">Valorant</SelectItem>
                       <SelectItem value="League of Legends">League of Legends</SelectItem>
                       <SelectItem value="CS2">CS2</SelectItem>
@@ -320,12 +320,12 @@ export default function Discover() {
                     </SelectContent>
                   </Select>
 
-                  <Select value={regionFilter} onValueChange={setRegionFilter}>
+                  <Select value={regionFilter || "all"} onValueChange={(value) => setRegionFilter(value === "all" ? "" : value)}>
                     <SelectTrigger className="w-48 bg-gaming-darker border-gaming-card-hover text-white">
                       <SelectValue placeholder="Filter by region" />
                     </SelectTrigger>
                     <SelectContent className="bg-gaming-card border-gaming-card-hover">
-                      <SelectItem value="">All Regions</SelectItem>
+                      <SelectItem value="all">All Regions</SelectItem>
                       <SelectItem value="North America">North America</SelectItem>
                       <SelectItem value="Europe">Europe</SelectItem>
                       <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>

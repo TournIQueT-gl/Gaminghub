@@ -1075,6 +1075,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Streaming routes
+  app.get('/api/streams', async (req, res) => {
+    try {
+      const streams = await storage.getStreams();
+      res.json(streams);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch streams" });
+    }
+  });
+
+  app.post('/api/streams', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const streamData = { ...req.body, streamerId: userId };
+      const stream = await storage.createStream(streamData);
+      res.json(stream);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create stream" });
+    }
+  });
+
+  app.post('/api/streams/:id/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const streamerId = req.params.id;
+      const follow = await storage.followStream(userId, streamerId);
+      res.json(follow);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to follow stream" });
+    }
+  });
+
+  // Content routes
+  app.get('/api/content', async (req, res) => {
+    try {
+      const content = await storage.getContent();
+      res.json(content);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch content" });
+    }
+  });
+
+  app.post('/api/content', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const contentData = { ...req.body, creatorId: userId };
+      const content = await storage.createContent(contentData);
+      res.json(content);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create content" });
+    }
+  });
+
+  app.post('/api/content/:id/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const contentId = parseInt(req.params.id);
+      await storage.likeContent(contentId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to like content" });
+    }
+  });
+
+  // User game routes
+  app.get('/api/users/games', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const games = await storage.getUserGameLibrary(userId);
+      res.json(games);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch game library" });
+    }
+  });
+
+  app.post('/api/users/games', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const gameData = { ...req.body, userId };
+      const game = await storage.addGameToLibrary(gameData);
+      res.json(game);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add game to library" });
+    }
+  });
+
+  app.get('/api/users/game-sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sessions = await storage.getUserGameSessions(userId);
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch game sessions" });
+    }
+  });
+
+  app.get('/api/users/game-achievements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const achievements = await storage.getUserGameAchievements(userId);
+      res.json(achievements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // Discover routes
+  app.get('/api/discover/users', async (req, res) => {
+    try {
+      // Mock discovered users for now
+      const mockUsers = [
+        {
+          id: "user1",
+          username: "ProGamer123",
+          displayName: "Pro Gamer",
+          avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face",
+          bio: "Competitive gamer and streamer",
+          favoriteGames: ["Valorant", "League of Legends"],
+          followers: 1250,
+          level: 15
+        },
+        {
+          id: "user2", 
+          username: "StreamQueen",
+          displayName: "Stream Queen",
+          avatarUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=100&h=100&fit=crop&crop=face",
+          bio: "Content creator and tournament organizer",
+          favoriteGames: ["CS2", "Overwatch 2"],
+          followers: 2840,
+          level: 22
+        }
+      ];
+      res.json(mockUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch discovered users" });
+    }
+  });
+
   // Admin routes
   app.get('/api/admin/stats', isAuthenticated, async (req: any, res) => {
     try {
