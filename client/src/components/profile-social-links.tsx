@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,9 +87,14 @@ const PLATFORM_CONFIGS = {
 
 export default function ProfileSocialLinks({ userId, socialLinks = [], editable = false }: ProfileSocialLinksProps) {
   const [editMode, setEditMode] = useState(false);
-  const [links, setLinks] = useState<SocialLink[]>(socialLinks);
+  const [links, setLinks] = useState<SocialLink[]>(socialLinks || []);
   const [newLink, setNewLink] = useState({ platform: '', url: '', username: '' });
   const { toast } = useToast();
+
+  // Update links when socialLinks prop changes
+  useEffect(() => {
+    setLinks(socialLinks || []);
+  }, [socialLinks]);
 
   const updateSocialLinksMutation = useMutation({
     mutationFn: async (data: { socialLinks: SocialLink[] }) => {

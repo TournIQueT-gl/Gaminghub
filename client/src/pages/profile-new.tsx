@@ -84,13 +84,14 @@ interface GameStats {
 
 export default function ProfileNew() {
   const params = useParams();
-  const targetUserId = params.userId || null;
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const { validateProfile, getFieldError, clearFieldError } = useProfileValidation();
   
+  // Handle URL params properly
+  const targetUserId = params.userId && params.userId !== user?.id ? params.userId : null;
   const profileUserId = targetUserId || user?.id;
-  const isOwnProfile = !targetUserId || targetUserId === user?.id;
+  const isOwnProfile = !targetUserId;
 
   const [editMode, setEditMode] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -106,21 +107,22 @@ export default function ProfileNew() {
   });
 
   // Fetch profile user data
-  const { data: profileUser, isLoading: profileLoading } = useQuery({
-    queryKey: [`/api/auth/user`, profileUserId],
+  const { data: profileUser, isLoading: profileLoading, error: profileError } = useQuery({
+    queryKey: isOwnProfile ? [`/api/auth/user`] : [`/api/users/${profileUserId}`],
     queryFn: async () => {
       if (!profileUserId) return null;
-      if (isOwnProfile) {
-        const response = await fetch('/api/auth/user');
-        if (!response.ok) throw new Error('Failed to fetch user');
-        return response.json();
-      } else {
-        const response = await fetch(`/api/users/${profileUserId}`);
-        if (!response.ok) throw new Error('Failed to fetch user');
-        return response.json();
+      const endpoint = isOwnProfile ? '/api/auth/user' : `/api/users/${profileUserId}`;
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('User not found');
+        }
+        throw new Error('Failed to fetch user');
       }
+      return response.json();
     },
     enabled: !!profileUserId && isAuthenticated,
+    retry: false,
   });
 
   // Fetch user stats
@@ -212,7 +214,7 @@ export default function ProfileNew() {
   });
 
   useEffect(() => {
-    if (profileUser) {
+    if (profileUser && isOwnProfile) {
       setProfileData({
         username: profileUser.username || '',
         bio: profileUser.bio || '',
@@ -222,7 +224,37 @@ export default function ProfileNew() {
         gameInput: '',
       });
     }
-  }, [profileUser]);
+  }, [profileUser, isOwnProfile]);
+
+  // Handle error states
+  if (profileError && !profileLoading) {
+    return (
+      <div className="min-h-screen bg-gaming-dark text-gaming-text">
+        <div className="flex">
+          <Sidebar />
+          <div className="flex-1 ml-64">
+            <Header title="Profile Not Found" />
+            <div className="p-6">
+              <Card className="bg-gaming-card border-gaming-card-hover">
+                <CardContent className="p-8 text-center">
+                  <User className="w-16 h-16 text-gaming-text-dim mx-auto mb-4" />
+                  <h2 className="text-xl font-semibold text-white mb-2">User Not Found</h2>
+                  <p className="text-gaming-text-dim mb-4">
+                    The profile you're looking for doesn't exist or has been removed.
+                  </p>
+                  <Link href="/">
+                    <Button className="bg-gaming-blue hover:bg-blue-600">
+                      Return to Feed
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading || profileLoading || statsLoading) {
     return (
@@ -240,24 +272,12 @@ export default function ProfileNew() {
     );
   }
 
-  if (!profileUser && !isOwnProfile) {
-    return (
-      <div className="min-h-screen bg-gaming-dark text-gaming-text">
-        <div className="flex">
-          <Sidebar />
-          <div className="flex-1 ml-64">
-            <Header title="User Not Found" />
-            <div className="p-6">
-              <div className="text-center py-12">
-                <User className="w-16 h-16 text-gaming-text-dim mx-auto mb-4" />
-                <h1 className="text-2xl font-bold text-white mb-2">User Not Found</h1>
-                <p className="text-gaming-text-dim">The user you're looking for doesn't exist.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  if (!isAuthenticated) {
+    return <LoadingPage text="Please log in to view profiles" />;
+  }
+
+  if (!profileUserId) {
+    return <LoadingPage text="Loading user data..." />;
   }
 
   const displayUser = profileUser || user;
@@ -341,7 +361,7 @@ export default function ProfileNew() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 ml-64">
-          <Header title={isOwnProfile ? "Your Profile" : `${displayUser?.username}'s Profile`} />
+          <Header title={isOwnProfile ? "Your Profile" : `${profileUser?.username || 'User'}'s Profile`} />
           
           <div className="p-6 space-y-6">
             {/* Profile Header */}
@@ -364,8 +384,8 @@ export default function ProfileNew() {
                 <div className="flex flex-col lg:flex-row items-start gap-6 -mt-16">
                   {/* Profile Picture */}
                   <ProfileAvatarUpload
-                    currentImage={displayUser?.profileImageUrl}
-                    username={displayUser?.username}
+                    currentImage={profileUser?.profileImageUrl}
+                    username={profileUser?.username}
                     editable={isOwnProfile}
                     onImageUpdate={(imageUrl) => {
                       if (isOwnProfile) {
@@ -379,8 +399,8 @@ export default function ProfileNew() {
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <h1 className="text-3xl font-bold text-white">{displayUser?.username || 'Anonymous Gamer'}</h1>
-                          {displayUser?.isVerified && (
+                          <h1 className="text-3xl font-bold text-white">{profileUser?.username || 'Anonymous Gamer'}</h1>
+                          {profileUser?.isVerified && (
                             <Badge className="bg-gaming-blue text-white">
                               <Shield className="w-3 h-3 mr-1" />
                               Verified
@@ -652,7 +672,7 @@ export default function ProfileNew() {
             {isOwnProfile && (
               <ProfileErrorBoundary>
                 <ProfileCompletion 
-                  user={displayUser} 
+                  user={profileUser} 
                   onEditProfile={() => setEditMode(true)} 
                 />
               </ProfileErrorBoundary>
@@ -719,7 +739,7 @@ export default function ProfileNew() {
               <ProfileSettingsModal
                 open={settingsModalOpen}
                 onOpenChange={setSettingsModalOpen}
-                user={displayUser}
+                user={profileUser}
               />
             )}
 

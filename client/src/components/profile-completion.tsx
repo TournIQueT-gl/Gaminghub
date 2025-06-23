@@ -55,6 +55,20 @@ export default function ProfileCompletion({ user, onEditProfile }: ProfileComple
       completed: !!(user?.favoriteGames && user.favoriteGames.length >= 3),
       points: 10,
     },
+    {
+      id: 'social_links',
+      label: 'Social Links',
+      icon: Globe,
+      completed: !!(user?.socialLinks && user.socialLinks.length > 0),
+      points: 10,
+    },
+    {
+      id: 'social_connections',
+      label: 'Follow Others',
+      icon: Users,
+      completed: false, // Mock - would check if user has followers/following
+      points: 10,
+    },
   ];
 
   const completedItems = completionItems.filter(item => item.completed);

@@ -55,22 +55,22 @@ export default function Header({ title }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-gaming-card border-gaming-card-hover">
-              <Link href="/profile">
-                <DropdownMenuItem className="text-white hover:bg-gaming-card-hover">
+              <DropdownMenuItem asChild className="text-white hover:bg-gaming-card-hover">
+                <Link href="/profile">
                   <User className="w-4 h-4 mr-2" />
                   View Profile
-                </DropdownMenuItem>
-              </Link>
-              <Link href="/settings">
-                <DropdownMenuItem className="text-white hover:bg-gaming-card-hover">
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="text-white hover:bg-gaming-card-hover">
+                <Link href="/settings">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator className="border-gaming-card-hover" />
               <DropdownMenuItem 
                 onClick={() => logout()}
-                className="text-red-400 hover:bg-gaming-card-hover"
+                className="text-red-400 hover:bg-gaming-card-hover cursor-pointer"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
