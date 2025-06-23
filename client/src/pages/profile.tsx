@@ -179,19 +179,25 @@ export default function Profile() {
   }
 
   return (
-    <ResponsiveLayout title="Profile">
-      <div className="p-3 sm:p-4 md:p-6">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
-          {/* Profile Overview */}
-          <div className="xl:col-span-1 space-y-4 md:space-y-6">
-            <Card className="bg-gaming-card border-gaming-card-hover">
-              <CardHeader className="text-center p-4 md:p-6">
-                <div className="relative mx-auto">
-                  <img 
-                    src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200"} 
-                    alt="Profile" 
-                    className="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover mx-auto border-4 border-gaming-blue"
-                  />
+    <div className="min-h-screen bg-gaming-dark text-gaming-text">
+      <div className="flex">
+        <Sidebar />
+        
+        <div className="flex-1 ml-64">
+          <Header title="Profile" />
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Profile Overview */}
+              <div className="lg:col-span-1 space-y-6">
+                <Card className="bg-gaming-card border-gaming-card-hover">
+                  <CardHeader className="text-center">
+                    <div className="relative mx-auto">
+                      <img 
+                        src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200"} 
+                        alt="Profile" 
+                        className="w-24 h-24 rounded-xl object-cover mx-auto border-4 border-gaming-blue"
+                      />
                       <Button 
                         size="icon" 
                         className="absolute -bottom-2 -right-2 w-8 h-8 bg-gaming-blue hover:bg-blue-600 rounded-full"
