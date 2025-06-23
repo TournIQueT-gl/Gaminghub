@@ -177,11 +177,40 @@ export interface IStorage {
   searchMessages(roomId: number, query: string, limit?: number): Promise<(ChatMessage & { user: User })[]>;
   getOrCreateDirectRoom(userId1: string, userId2: string): Promise<ChatRoom>;
   
-  // Notification operations
+  // Enhanced notification operations
   createNotification(notification: InsertNotification): Promise<Notification>;
-  getUserNotifications(userId: string): Promise<Notification[]>;
+  getUserNotifications(userId: string, filters?: {
+    category?: string;
+    isRead?: boolean;
+    isArchived?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<Notification[]>;
   markNotificationAsRead(id: number, userId: string): Promise<void>;
-  markAllNotificationsAsRead(userId: string): Promise<void>;
+  markAllNotificationsAsRead(userId: string, category?: string): Promise<void>;
+  archiveNotification(id: number, userId: string): Promise<void>;
+  deleteNotification(id: number, userId: string): Promise<void>;
+  getUnreadNotificationCount(userId: string, category?: string): Promise<number>;
+  
+  // Notification settings
+  getUserNotificationSettings(userId: string): Promise<NotificationSettings[]>;
+  updateNotificationSetting(userId: string, type: string, settings: {
+    email?: boolean;
+    push?: boolean;
+    inApp?: boolean;
+  }): Promise<NotificationSettings>;
+  
+  // Push notifications
+  createPushSubscription(subscription: InsertPushSubscription): Promise<PushSubscription>;
+  deletePushSubscription(userId: string, endpoint: string): Promise<void>;
+  getUserPushSubscriptions(userId: string): Promise<PushSubscription[]>;
+  sendPushNotification(userId: string, notification: {
+    title: string;
+    body: string;
+    icon?: string;
+    badge?: string;
+    data?: any;
+  }): Promise<void>;
   
   // Follow operations
   followUser(followerId: string, followingId: string): Promise<Follow>;

@@ -69,6 +69,8 @@ export class MemoryStorage implements IStorage {
   private gameLeaderboards = new Map<string, GameLeaderboard>();
   private gameReviews = new Map<number, GameReview>();
   private gameLibrarySyncs = new Map<number, GameLibrarySync>();
+  private notificationSettings = new Map<string, NotificationSettings[]>(); // key: userId
+  private pushSubscriptions = new Map<number, PushSubscription>();
 
   private postIdCounter = 1;
   private commentIdCounter = 1;
@@ -98,6 +100,7 @@ export class MemoryStorage implements IStorage {
   private gameSessionIdCounter = 1;
   private gameReviewIdCounter = 1;
   private gameLibrarySyncIdCounter = 1;
+  private pushSubscriptionIdCounter = 1;
   private chatRoomMembershipIdCounter = 1;
 
   async getUser(id: string): Promise<User | undefined> {

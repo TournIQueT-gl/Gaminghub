@@ -197,16 +197,48 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Notifications table
+// Enhanced notifications table
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
-  type: varchar("type").notNull(), // like, comment, tournament, clan, etc.
+  type: varchar("type").notNull(), // follow, like, comment, tournament, clan, friend_request, achievement, etc.
+  category: varchar("category").default("general"), // "social", "gaming", "system", "tournament", "clan"
   title: varchar("title").notNull(),
   message: text("message").notNull(),
+  actionText: varchar("action_text"), // "View", "Join", "Accept", etc.
+  actionUrl: varchar("action_url"), // URL to navigate when clicked
   data: jsonb("data"), // additional context data
+  priority: varchar("priority").default("normal"), // "low", "normal", "high", "urgent"
   isRead: boolean("is_read").default(false),
+  isArchived: boolean("is_archived").default(false),
+  readAt: timestamp("read_at"),
+  expiresAt: timestamp("expires_at"), // for temporary notifications
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Notification preferences per user
+export const notificationSettings = pgTable("notification_settings", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type").notNull(), // notification type
+  email: boolean("email").default(true),
+  push: boolean("push").default(true),
+  inApp: boolean("in_app").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Push notification subscriptions
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUsed: timestamp("last_used").defaultNow(),
 });
 
 // Follows table (user following system)
@@ -570,6 +602,18 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
+export const insertNotificationSettingsSchema = createInsertSchema(notificationSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  lastUsed: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -597,6 +641,10 @@ export type InsertChatRoomMembership = z.infer<typeof insertChatRoomMembershipSc
 export type ChatRoomMembership = typeof chatRoomMemberships.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+export type InsertNotificationSettings = z.infer<typeof insertNotificationSettingsSchema>;
+export type NotificationSettings = typeof notificationSettings.$inferSelect;
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type ClanMembership = typeof clanMemberships.$inferSelect;
 export type TournamentParticipant = typeof tournamentParticipants.$inferSelect;
 export type TournamentMatch = typeof tournamentMatches.$inferSelect;
