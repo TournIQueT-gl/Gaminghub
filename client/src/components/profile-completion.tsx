@@ -10,7 +10,8 @@ import {
   Globe, 
   Gamepad2,
   CheckCircle,
-  Circle
+  Circle,
+  Users
 } from "lucide-react";
 
 interface ProfileCompletionProps {
@@ -66,7 +67,7 @@ export default function ProfileCompletion({ user, onEditProfile }: ProfileComple
       id: 'social_connections',
       label: 'Follow Others',
       icon: Users,
-      completed: false, // Mock - would check if user has followers/following
+      completed: !!(user?.followingCount && user.followingCount >= 5),
       points: 10,
     },
   ];

@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       ];
       
-      res.json(mockAchievements);
+      res.json(achievements);
     } catch (error) {
       console.error("Error fetching user achievements:", error);
       res.status(500).json({ message: "Failed to fetch achievements" });

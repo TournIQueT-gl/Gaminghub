@@ -84,9 +84,36 @@ export class MemoryStorage implements IStorage {
     const user = this.users.get(userId);
     if (user) {
       user.xp = (user.xp || 0) + xp;
-      user.level = Math.floor((user.xp || 0) / 100) + 1;
+      // Enhanced leveling formula: exponential growth
+      user.level = this.calculateLevel(user.xp);
       user.updatedAt = new Date();
     }
+  }
+
+  private calculateLevel(xp: number): number {
+    // Exponential leveling: each level requires more XP
+    // Level 1: 0 XP, Level 2: 100 XP, Level 3: 250 XP, Level 4: 450 XP, etc.
+    let level = 1;
+    let requiredXP = 0;
+    
+    while (xp >= requiredXP) {
+      level++;
+      requiredXP += level * 50; // Each level requires 50 * level XP more than previous
+    }
+    
+    return level - 1;
+  }
+
+  getXPForLevel(level: number): number {
+    let totalXP = 0;
+    for (let i = 2; i <= level; i++) {
+      totalXP += i * 50;
+    }
+    return totalXP;
+  }
+
+  getNextLevelXP(level: number): number {
+    return this.getXPForLevel(level + 1);
   }
 
   async getUsersByIds(ids: string[]): Promise<User[]> {

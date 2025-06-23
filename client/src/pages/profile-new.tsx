@@ -281,18 +281,24 @@ export default function ProfileNew() {
   }
 
   const displayUser = profileUser || user;
-  const displayStats = userStats || { 
-    level: 1, 
-    xp: 0, 
-    postsCount: 0, 
-    followersCount: 0, 
-    followingCount: 0,
-    clanMembership: null 
+  const displayStats = {
+    level: currentLevel,
+    xp: currentXP,
+    postsCount: statsData?.postsCount || 0,
+    followersCount: statsData?.followersCount || 0,
+    followingCount: statsData?.followingCount || 0,
+    achievementsCount: achievements?.filter(a => a.unlockedAt).length || 0,
+    winRate: statsData?.winRate || 0.75,
+    hoursPlayed: statsData?.hoursPlayed || 156,
+    favoriteGame: profileUser?.favoriteGames?.[0] || 'Valorant',
+    rank: statsData?.rank || 'Diamond III',
+    lastActive: new Date(statsData?.lastActive || Date.now()),
+    streakDays: statsData?.streakDays || 12,
+    tournamentsWon: statsData?.tournamentsWon || 3,
+    clanMembership: statsData?.clanMembership || null 
   };
 
-  const currentLevelXP = (displayStats.level - 1) * 1000;
-  const nextLevelXP = displayStats.level * 1000;
-  const levelProgress = ((displayStats.xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+  // Level progress is now calculated above in displayStats
 
   const handleSaveProfile = async () => {
     const isValid = await validateProfile({

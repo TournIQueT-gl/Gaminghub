@@ -31,15 +31,27 @@ export function calculateProfileCompleteness(user: any): number {
 }
 
 export function getProfileLevel(xp: number): number {
-  return Math.floor(xp / 100) + 1;
+  let level = 1;
+  let requiredXP = 0;
+  
+  while (xp >= requiredXP) {
+    level++;
+    requiredXP += level * 50;
+  }
+  
+  return level - 1;
 }
 
 export function getXPForLevel(level: number): number {
-  return (level - 1) * 100;
+  let totalXP = 0;
+  for (let i = 2; i <= level; i++) {
+    totalXP += i * 50;
+  }
+  return totalXP;
 }
 
 export function getNextLevelXP(level: number): number {
-  return level * 100;
+  return getXPForLevel(level + 1);
 }
 
 export function formatNumber(num: number): string {
