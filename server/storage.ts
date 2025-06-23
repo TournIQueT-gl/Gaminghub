@@ -61,12 +61,53 @@ export interface IStorage {
   
   // Clan operations
   createClan(clan: InsertClan): Promise<Clan>;
-  getClans(): Promise<Clan[]>;
-  getClanById(id: number): Promise<Clan | undefined>;
+  getClans(filters?: {
+    search?: string;
+    game?: string;
+    region?: string;
+    isPrivate?: boolean;
+    minLevel?: number;
+    maxLevel?: number;
+  }): Promise<(Clan & { memberCount: number; isOwner?: boolean; isMember?: boolean })[]>;
+  getClanById(id: number, userId?: string): Promise<(Clan & { 
+    members: (ClanMembership & { user: User })[];
+    memberCount: number;
+    userMembership?: ClanMembership;
+    recentEvents: ClanEvent[];
+    achievements: ClanAchievement[];
+  }) | undefined>;
+  updateClan(clanId: number, updates: Partial<Clan>, userId: string): Promise<Clan>;
+  deleteClan(clanId: number, userId: string): Promise<void>;
+  
+  // Clan membership operations
+  createClanApplication(application: InsertClanApplication): Promise<ClanApplication>;
+  getClanApplications(clanId: number): Promise<(ClanApplication & { user: User })[]>;
+  reviewClanApplication(applicationId: number, status: 'approved' | 'rejected', reviewerId: string): Promise<void>;
   joinClan(clanId: number, userId: string, role?: string): Promise<ClanMembership>;
+  leaveClan(clanId: number, userId: string): Promise<void>;
+  updateClanMembership(membershipId: number, updates: Partial<ClanMembership>, requesterId: string): Promise<ClanMembership>;
+  kickClanMember(clanId: number, targetUserId: string, kickerId: string): Promise<void>;
   getClanMembers(clanId: number): Promise<(ClanMembership & { user: User })[]>;
   getUserClanMembership(userId: string): Promise<(ClanMembership & { clan: Clan }) | undefined>;
+  getClanMembershipWithPermissions(clanId: number, userId: string): Promise<ClanMembership | undefined>;
+  
+  // Clan progression
   updateClanXP(clanId: number, xp: number): Promise<void>;
+  updateClanTrophies(clanId: number, trophies: number): Promise<void>;
+  recordClanMatch(clanId: number, won: boolean, xpGained: number, trophiesGained: number): Promise<void>;
+  
+  // Clan events
+  createClanEvent(event: InsertClanEvent): Promise<ClanEvent>;
+  getClanEvents(clanId: number, upcoming?: boolean): Promise<ClanEvent[]>;
+  updateClanEvent(eventId: number, updates: Partial<ClanEvent>, userId: string): Promise<ClanEvent>;
+  deleteClanEvent(eventId: number, userId: string): Promise<void>;
+  joinClanEvent(eventId: number, userId: string, status?: string): Promise<ClanEventParticipant>;
+  leaveClanEvent(eventId: number, userId: string): Promise<void>;
+  getClanEventParticipants(eventId: number): Promise<(ClanEventParticipant & { user: User })[]>;
+  
+  // Clan achievements
+  unlockClanAchievement(clanId: number, achievementId: string, title: string, description: string, rarity?: string): Promise<ClanAchievement>;
+  getClanAchievements(clanId: number): Promise<ClanAchievement[]>;
   
   // Tournament operations
   createTournament(tournament: InsertTournament): Promise<Tournament>;

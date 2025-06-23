@@ -7,7 +7,7 @@ import { tournamentService } from "./services/tournaments";
 import { clanService } from "./services/clans";
 import { notificationService } from "./services/notifications";
 import { createWebSocketService } from "./services/websocket";
-import { insertPostSchema, insertCommentSchema, insertClanSchema, insertTournamentSchema, insertChatRoomSchema, insertChatMessageSchema } from "@shared/schema";
+import { insertPostSchema, insertCommentSchema, insertClanSchema, insertClanApplicationSchema, insertClanEventSchema, insertTournamentSchema, insertChatRoomSchema, insertChatMessageSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {

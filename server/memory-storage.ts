@@ -10,6 +10,13 @@ import type {
   Clan,
   InsertClan,
   ClanMembership,
+  InsertClanMembership,
+  ClanApplication,
+  InsertClanApplication,
+  ClanEvent,
+  InsertClanEvent,
+  ClanEventParticipant,
+  ClanAchievement,
   Tournament,
   InsertTournament,
   TournamentParticipant,
@@ -31,6 +38,10 @@ export class MemoryStorage implements IStorage {
   private likes = new Map<number, Like>();
   private clans = new Map<number, Clan>();
   private clanMemberships = new Map<number, ClanMembership>();
+  private clanApplications = new Map<number, ClanApplication>();
+  private clanEvents = new Map<number, ClanEvent>();
+  private clanEventParticipants = new Map<number, ClanEventParticipant>();
+  private clanAchievements = new Map<number, ClanAchievement>();
   private tournaments = new Map<number, Tournament>();
   private tournamentParticipants = new Map<number, TournamentParticipant>();
   private tournamentMatches = new Map<number, TournamentMatch>();
@@ -45,6 +56,10 @@ export class MemoryStorage implements IStorage {
   private likeIdCounter = 1;
   private clanIdCounter = 1;
   private membershipIdCounter = 1;
+  private clanApplicationIdCounter = 1;
+  private clanEventIdCounter = 1;
+  private clanEventParticipantIdCounter = 1;
+  private clanAchievementIdCounter = 1;
   private tournamentIdCounter = 1;
   private participantIdCounter = 1;
   private matchIdCounter = 1;
