@@ -15,6 +15,10 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
+      // Auto-close sidebar on mobile when screen is resized
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(false);
+      }
     };
 
     checkScreenSize();
@@ -23,7 +27,7 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
   }, []);
 
   useEffect(() => {
-    if (sidebarOpen) {
+    if (isMobile && sidebarOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -32,10 +36,10 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [sidebarOpen]);
+  }, [sidebarOpen, isMobile]);
 
   return (
-    <div className="mobile-container min-h-screen bg-gaming-dark text-gaming-text">
+    <div className="responsive-container min-h-screen bg-gaming-dark text-gaming-text">
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div 
@@ -45,24 +49,25 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed top-0 left-0 h-full w-72 sm:w-64 bg-gaming-darker border-r border-gaming-card-hover z-50 transform transition-transform duration-300
+      <aside className={`
+        fixed top-0 left-0 h-full w-64 bg-gaming-darker border-r border-gaming-card-hover z-50 transform transition-transform duration-300 ease-in-out
         ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
       `}>
-        <Sidebar onItemClick={() => setSidebarOpen(false)} />
-      </div>
+        <Sidebar onItemClick={() => isMobile && setSidebarOpen(false)} />
+      </aside>
 
       {/* Main content */}
-      <div className={`flex flex-col min-h-screen ${!isMobile ? 'ml-64' : ''}`}>
+      <div className={`min-h-screen flex flex-col ${!isMobile ? 'ml-64' : ''}`}>
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-gaming-card border-b border-gaming-card-hover">
-          <div className="flex items-center p-3 sm:p-4">
+        <header className="sticky top-0 z-30 bg-gaming-card border-b border-gaming-card-hover">
+          <div className="flex items-center px-4 py-3">
             {/* Mobile menu button */}
             {isMobile && (
               <button 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="mr-3 p-2 rounded-lg bg-gaming-darker border border-gaming-card-hover text-white hover:bg-gaming-card transition-colors touch-manipulation"
+                className="mr-3 p-2 rounded-lg bg-gaming-darker border border-gaming-card-hover text-white hover:bg-gaming-card transition-colors touch-target"
                 aria-label="Toggle menu"
+                type="button"
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -72,7 +77,7 @@ export default function ResponsiveLayout({ children, title }: ResponsiveLayoutPr
               <Header title={title} />
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Page content */}
         <main className="flex-1 overflow-auto">
