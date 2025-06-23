@@ -306,6 +306,7 @@ export default function ProfileNew() {
   };
 
   // Calculate level properly
+  const statsData = userStats; // Define statsData from userStats query
   const currentXP = statsData?.xp || profileUser?.xp || 0;
   const currentLevel = calculateLevel(currentXP);
   const currentLevelXP = getXPForLevel(currentLevel);
