@@ -89,11 +89,17 @@ export class WebSocketService {
   private async handleAuth(ws: WebSocket, data: { userId: string; username: string }) {
     const { userId, username } = data;
     
-    // Verify user exists
-    const user = await storage.getUser(userId);
+    // Verify user exists or create them
+    let user = await storage.getUser(userId);
     if (!user) {
-      this.sendError(ws, 'User not found');
-      return;
+      user = await storage.upsertUser({
+        id: userId,
+        email: `user${userId}@example.com`,
+        firstName: username || "User",
+        lastName: "",
+        profileImageUrl: null,
+        username: username || `User${Math.floor(Math.random() * 1000)}`,
+      });
     }
 
     const connectedUser: ConnectedUser = {

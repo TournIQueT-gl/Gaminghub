@@ -51,6 +51,18 @@ export async function quickSeed(storage: MemoryStorage) {
       addedAt: new Date(),
     });
 
+    await storage.addGameToLibrary({
+      userId: "dev-user-123",
+      gameId: "cs2",
+      title: "Counter-Strike 2",
+      platform: "PC", 
+      isFavorite: false,
+      isPlaying: false,
+      hoursPlayed: 120,
+      lastPlayed: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      addedAt: new Date(),
+    });
+
     console.log("Quick seed completed successfully!");
     return true;
   } catch (error) {

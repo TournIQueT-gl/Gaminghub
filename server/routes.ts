@@ -72,7 +72,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             profileImageUrl: req.user?.claims?.profile_image_url || null,
           });
         } else {
-          return res.status(404).json({ message: "User not found" });
+          // Auto-create user if they don't exist
+          user = await storage.upsertUser({
+            id: userId,
+            email: `user${userId}@example.com`,
+            firstName: "User",
+            lastName: "",
+            profileImageUrl: null,
+          });
         }
       }
 
@@ -103,25 +110,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // First ensure the user exists in storage
-      let user = await storage.getUser(userId);
-      if (!user) {
-        // Auto-create user if they don't exist
-        user = await storage.upsertUser({
-          id: userId,
-          email: req.user.claims.email,
-          firstName: req.user.claims.first_name,
-          lastName: req.user.claims.last_name,
-          profileImageUrl: req.user.claims.profile_image_url,
-        });
-      }
+      // User should already exist from isAuthenticated middleware
       
       const membership = await storage.getUserClanMembership(userId);
       
-      if (!membership) {
-        return res.json(null);
-      }
-      
+      // Return null for no membership instead of error
       res.json(membership);
     } catch (error) {
       console.error("Error fetching clan membership:", error);
@@ -1144,17 +1137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // Ensure user exists
-      let user = await storage.getUser(userId);
-      if (!user) {
-        user = await storage.upsertUser({
-          id: userId,
-          email: req.user.claims.email,
-          firstName: req.user.claims.first_name,
-          lastName: req.user.claims.last_name,
-          profileImageUrl: req.user.claims.profile_image_url,
-        });
-      }
+      // User should already exist from isAuthenticated middleware
       
       const games = await storage.getUserGameLibrary(userId);
       res.json(games);

@@ -49,17 +49,21 @@ export default function Gaming() {
   const { toast } = useToast();
 
   // User game library query
-  const { data: gameLibrary = [], isLoading: isLoadingLibrary } = useQuery({
+  const { data: gameLibrary = [], isLoading: isLoadingLibrary, refetch: refetchLibrary } = useQuery({
     queryKey: ['/api/users/games', { platform: platformFilter }],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (platformFilter) params.append('platform', platformFilter);
 
       const response = await fetch(`/api/users/games?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch game library');
+      if (!response.ok) {
+        console.error('Game library fetch failed:', response.status, response.statusText);
+        return [];
+      }
       return response.json();
     },
     enabled: isAuthenticated,
+    retry: 2,
   });
 
   // User game sessions query
