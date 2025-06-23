@@ -183,20 +183,20 @@ export default function Profile() {
       <div className="flex">
         <Sidebar />
         
-        <div className="flex-1 ml-64">
+        <div className="flex-1 md:ml-64">
           <Header title="Profile" />
           
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="p-4 md:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
               {/* Profile Overview */}
-              <div className="lg:col-span-1 space-y-6">
+              <div className="lg:col-span-1 space-y-4 md:space-y-6">
                 <Card className="bg-gaming-card border-gaming-card-hover">
-                  <CardHeader className="text-center">
+                  <CardHeader className="text-center p-4 md:p-6">
                     <div className="relative mx-auto">
                       <img 
                         src={user?.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200"} 
                         alt="Profile" 
-                        className="w-24 h-24 rounded-xl object-cover mx-auto border-4 border-gaming-blue"
+                        className="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover mx-auto border-4 border-gaming-blue"
                       />
                       <Button 
                         size="icon" 
