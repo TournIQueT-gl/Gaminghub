@@ -223,7 +223,7 @@ export default function ProfileSocialLinks({ userId, socialLinks = [], editable 
                   >
                     <ExternalLink className="w-4 h-4" />
                   </Button>
-                  {editMode && (
+                  {editMode && editable && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -240,34 +240,47 @@ export default function ProfileSocialLinks({ userId, socialLinks = [], editable 
         </div>
 
         {/* Add new link form */}
-        {editMode && (
-          <div className="space-y-4 p-4 bg-gaming-darker rounded-lg border border-gaming-card-hover">
-            <Label className="text-white">Add Social Link</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <select
+        {editMode && editable && (
+          <div className="space-y-3 pt-4 border-t border-gaming-card-hover">
+            <h4 className="text-white font-medium">Add Social Link</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Select 
                 value={newLink.platform}
-                onChange={(e) => setNewLink(prev => ({ ...prev, platform: e.target.value }))}
-                className="bg-gaming-card border border-gaming-card-hover text-white rounded-md px-3 py-2"
+                onValueChange={(value) => setNewLink(prev => ({ ...prev, platform: value }))}
               >
-                <option value="">Select Platform</option>
-                {Object.entries(PLATFORM_CONFIGS).map(([key, config]) => (
-                  <option key={key} value={key}>{config.name}</option>
-                ))}
-              </select>
+                <SelectTrigger className="bg-gaming-darker border-gaming-card-hover text-white">
+                  <SelectValue placeholder="Select platform" />
+                </SelectTrigger>
+                <SelectContent className="bg-gaming-card border-gaming-card-hover">
+                  {Object.entries(PLATFORM_CONFIGS)
+                    .filter(([key]) => !links.some(link => link.platform === key))
+                    .map(([key, config]) => (
+                    <SelectItem key={key} value={key} className="text-white hover:bg-gaming-card-hover">
+                      <div className="flex items-center gap-2">
+                        <config.icon className={`w-4 h-4 ${config.color}`} />
+                        {config.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
               <Input
+                placeholder={newLink.platform ? PLATFORM_CONFIGS[newLink.platform as keyof typeof PLATFORM_CONFIGS]?.placeholder || "Profile URL" : "Profile URL"}
                 value={newLink.url}
                 onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))}
-                placeholder={newLink.platform ? PLATFORM_CONFIGS[newLink.platform as keyof typeof PLATFORM_CONFIGS]?.placeholder : "Enter URL"}
-                className="bg-gaming-card border-gaming-card-hover text-white"
+                className="bg-gaming-darker border-gaming-card-hover text-white"
               />
             </div>
+            
             <div className="flex gap-2">
               <Button
                 onClick={addSocialLink}
                 size="sm"
+                disabled={!newLink.platform || !newLink.url}
                 className="bg-gaming-blue hover:bg-blue-600"
               >
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4 mr-2" />
                 Add Link
               </Button>
             </div>
@@ -275,23 +288,25 @@ export default function ProfileSocialLinks({ userId, socialLinks = [], editable 
         )}
 
         {/* Save/Cancel buttons */}
-        {editMode && (
+        {editMode && editable && (
           <div className="flex gap-2 pt-4 border-t border-gaming-card-hover">
             <Button
               onClick={saveSocialLinks}
               disabled={updateSocialLinksMutation.isPending}
               className="bg-gaming-emerald hover:bg-emerald-600"
+              size="sm"
             >
               {updateSocialLinksMutation.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button
+              variant="outline"
               onClick={() => {
                 setEditMode(false);
-                setLinks(socialLinks); // Reset to original
+                setLinks(socialLinks || []);
                 setNewLink({ platform: '', url: '', username: '' });
               }}
-              variant="outline"
-              className="border-gaming-card-hover"
+              size="sm"
+              className="border-gaming-card-hover hover:bg-gaming-card-hover"
             >
               Cancel
             </Button>

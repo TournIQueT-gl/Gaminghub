@@ -338,6 +338,54 @@ export default function ProfileNew() {
     }));
   };
 
+  const handleCoverPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Cover photo must be under 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target?.result as string;
+        updateProfileMutation.mutate({ 
+          coverImageUrl: base64String 
+        });
+      };
+      reader.readAsDataURL(file);
+
+      toast({
+        title: "Uploading cover photo",
+        description: "Your cover photo is being updated...",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload cover photo. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case 'legendary': return 'text-gaming-gold';
@@ -366,40 +414,57 @@ export default function ProfileNew() {
           <div className="p-6 space-y-6">
             {/* Profile Header */}
             <Card className="bg-gaming-card border-gaming-card-hover overflow-hidden">
-              <div className="relative h-40 bg-gradient-to-r from-gaming-purple via-gaming-blue to-gaming-emerald">
+              <div className="relative h-48 bg-gradient-to-r from-gaming-purple via-gaming-blue to-gaming-emerald">
+                {profileUser?.coverImageUrl && (
+                  <img 
+                    src={profileUser.coverImageUrl} 
+                    alt="Cover" 
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
                 <div className="absolute inset-0 bg-black/30" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 {isOwnProfile && (
                   <Button 
                     variant="ghost" 
                     size="icon"
+                    onClick={() => document.getElementById('cover-photo-input')?.click()}
                     className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10"
                   >
                     <Camera className="w-4 h-4" />
                   </Button>
                 )}
+                <input
+                  id="cover-photo-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverPhotoUpload}
+                  className="hidden"
+                />
               </div>
               
               <CardContent className="pt-0 pb-6">
-                <div className="flex flex-col lg:flex-row items-start gap-6 -mt-16">
+                <div className="flex flex-col lg:flex-row items-start gap-6 -mt-20">
                   {/* Profile Picture */}
-                  <ProfileAvatarUpload
-                    currentImage={profileUser?.profileImageUrl}
-                    username={profileUser?.username}
-                    editable={isOwnProfile}
-                    onImageUpdate={(imageUrl) => {
-                      if (isOwnProfile) {
-                        updateProfileMutation.mutate({ profileImageUrl: imageUrl });
-                      }
-                    }}
-                  />
+                  <div className="relative z-10">
+                    <ProfileAvatarUpload
+                      currentImage={profileUser?.profileImageUrl}
+                      username={profileUser?.username}
+                      editable={isOwnProfile}
+                      onImageUpdate={(imageUrl) => {
+                        if (isOwnProfile) {
+                          updateProfileMutation.mutate({ profileImageUrl: imageUrl });
+                        }
+                      }}
+                    />
+                  </div>
 
                   {/* Profile Info */}
-                  <div className="flex-1 space-y-4">
+                  <div className="flex-1 space-y-4 relative z-10 mt-4 lg:mt-0">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <h1 className="text-3xl font-bold text-white">{profileUser?.username || 'Anonymous Gamer'}</h1>
+                          <h1 className="text-3xl font-bold text-white drop-shadow-lg">{profileUser?.username || 'Anonymous Gamer'}</h1>
                           {profileUser?.isVerified && (
                             <Badge className="bg-gaming-blue text-white">
                               <Shield className="w-3 h-3 mr-1" />
@@ -413,9 +478,9 @@ export default function ProfileNew() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-gaming-text-dim text-lg">{displayUser?.email}</p>
-                        {displayUser?.bio && (
-                          <p className="text-gaming-text mt-2 max-w-2xl">{displayUser.bio}</p>
+                        <p className="text-gaming-text-dim text-lg drop-shadow">{profileUser?.email}</p>
+                        {profileUser?.bio && (
+                          <p className="text-gaming-text mt-2 max-w-2xl drop-shadow">{profileUser.bio}</p>
                         )}
                         
                         {/* Additional Info */}

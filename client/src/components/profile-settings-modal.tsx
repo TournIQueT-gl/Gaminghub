@@ -43,8 +43,25 @@ export default function ProfileSettingsModal({ open, onOpenChange, user }: Profi
     website: user?.website || '',
     favoriteGames: user?.favoriteGames || [],
     profileImageUrl: user?.profileImageUrl || '',
+    coverImageUrl: user?.coverImageUrl || '',
     gameInput: '',
   });
+
+  // Update form when user data changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        username: user.username || '',
+        bio: user.bio || '',
+        location: user.location || '',
+        website: user.website || '',
+        profileImageUrl: user.profileImageUrl || '',
+        coverImageUrl: user.coverImageUrl || '',
+        favoriteGames: user.favoriteGames || [],
+        gameInput: '',
+      });
+    }
+  }, [user]);
 
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: 'public',

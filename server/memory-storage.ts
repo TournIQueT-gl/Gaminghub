@@ -62,6 +62,7 @@ export class MemoryStorage implements IStorage {
       firstName: userData.firstName !== undefined ? userData.firstName : existing?.firstName || null,
       lastName: userData.lastName !== undefined ? userData.lastName : existing?.lastName || null,
       profileImageUrl: userData.profileImageUrl !== undefined ? userData.profileImageUrl : existing?.profileImageUrl || null,
+      coverImageUrl: userData.coverImageUrl !== undefined ? userData.coverImageUrl : existing?.coverImageUrl || null,
       username: userData.username !== undefined ? userData.username : existing?.username || `User${Math.floor(Math.random() * 1000)}`,
       bio: userData.bio !== undefined ? userData.bio : existing?.bio || null,
       location: userData.location !== undefined ? userData.location : existing?.location || null,
