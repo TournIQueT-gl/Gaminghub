@@ -26,7 +26,7 @@ export default function Tournaments() {
   });
 
   // Limit tournaments for guests
-  const displayTournaments = isGuest && tournaments ? tournaments.slice(0, GUEST_LIMITATIONS.maxViewableItems) : tournaments;
+  const displayTournaments = isGuest && Array.isArray(tournaments) ? tournaments.slice(0, GUEST_LIMITATIONS.maxViewableItems) : tournaments;
 
   const joinTournamentMutation = useMutation({
     mutationFn: async ({ tournamentId }: { tournamentId: number }) => {
@@ -39,8 +39,8 @@ export default function Tournaments() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
     },
-    onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
+    onError: (error: any) => {
+      if (error?.message?.includes('Unauthorized') || error?.status === 401) {
         toast({
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
@@ -106,7 +106,7 @@ export default function Tournaments() {
                   <Trophy className="h-4 w-4 text-gaming-blue" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-white">{tournaments?.length || 0}</div>
+                  <div className="text-2xl font-bold text-white">{Array.isArray(tournaments) ? tournaments.length : 0}</div>
                 </CardContent>
               </Card>
               
@@ -117,7 +117,7 @@ export default function Tournaments() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    {tournaments?.filter((t: any) => t.status === 'active').length || 0}
+                    {Array.isArray(tournaments) ? tournaments.filter((t: any) => t.status === 'active').length : 0}
                   </div>
                 </CardContent>
               </Card>
@@ -129,7 +129,7 @@ export default function Tournaments() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    {tournaments?.filter((t: any) => t.status === 'registering').length || 0}
+                    {Array.isArray(tournaments) ? tournaments.filter((t: any) => t.status === 'registering').length : 0}
                   </div>
                 </CardContent>
               </Card>
@@ -141,7 +141,7 @@ export default function Tournaments() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    ${tournaments?.reduce((sum: number, t: any) => sum + (parseFloat(t.prizePool) || 0), 0).toLocaleString() || '0'}
+                    ${Array.isArray(tournaments) ? tournaments.reduce((sum: number, t: any) => sum + (parseFloat(t.prizePool) || 0), 0).toLocaleString() : '0'}
                   </div>
                 </CardContent>
               </Card>
@@ -175,7 +175,7 @@ export default function Tournaments() {
                     </Card>
                   ))}
                 </div>
-              ) : displayTournaments && displayTournaments.length > 0 ? (
+              ) : Array.isArray(displayTournaments) && displayTournaments.length > 0 ? (
                 <div className="grid gap-6">
                   {displayTournaments.map((tournament: any) => (
                     <Card key={tournament.id} className="bg-gaming-card border-gaming-card-hover hover:border-gaming-blue/30 transition-colors">

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
+import { getQueryFn, queryClient } from "@/lib/queryClient";
 
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery({
@@ -9,8 +9,28 @@ export function useAuth() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const logout = () => {
-    window.location.href = '/api/logout';
+  const logout = async () => {
+    try {
+      const response = await fetch('/api/logout', { 
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        // Clear the React Query cache to remove user data
+        queryClient.clear();
+        // Force reload to ensure clean state
+        window.location.reload();
+      } else {
+        console.error('Logout failed');
+        // Fallback to redirect
+        window.location.href = '/api/logout';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback to redirect
+      window.location.href = '/api/logout';
+    }
   };
 
   const login = () => {

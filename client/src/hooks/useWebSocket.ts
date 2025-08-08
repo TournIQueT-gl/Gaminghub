@@ -40,8 +40,8 @@ export function useWebSocket(): UseWebSocketReturn {
         ws.send(JSON.stringify({
           type: 'auth',
           data: {
-            userId: user.id,
-            username: user.username || user.firstName || 'Anonymous'
+            userId: user?.id || '',
+            username: user?.username || user?.firstName || 'Anonymous'
           }
         }));
       };

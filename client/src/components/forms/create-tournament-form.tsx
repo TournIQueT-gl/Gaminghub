@@ -18,6 +18,7 @@ const createTournamentSchema = z.object({
   description: z.string().optional().or(z.literal("")),
   game: z.string().min(1, "Please select a game"),
   format: z.enum(["solo", "team"], { required_error: "Please select a format" }),
+  type: z.enum(["single-elimination", "double-elimination", "round-robin", "swiss"], { required_error: "Please select a tournament type" }),
   maxParticipants: z.number().min(4, "Minimum 4 participants").max(256, "Maximum 256 participants"),
   prizePool: z.string().optional().or(z.literal("")),
   startDate: z.string().min(1, "Start date is required"),
@@ -49,6 +50,7 @@ export default function CreateTournamentForm() {
       description: "",
       game: "",
       format: "solo",
+      type: "single-elimination",
       maxParticipants: 16,
       prizePool: "",
       startDate: "",
@@ -62,6 +64,7 @@ export default function CreateTournamentForm() {
         description: data.description || undefined,
         game: data.game,
         format: data.format,
+        type: data.type,
         maxParticipants: Number(data.maxParticipants),
         startDate: new Date(data.startDate).toISOString(),
         prizePool: data.prizePool || undefined,
@@ -184,6 +187,30 @@ export default function CreateTournamentForm() {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Tournament Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-gaming-darker border-gaming-card-hover text-white">
+                        <SelectValue placeholder="Select tournament type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-gaming-darker border-gaming-card-hover">
+                      <SelectItem value="single-elimination" className="text-white hover:bg-gaming-card">Single Elimination</SelectItem>
+                      <SelectItem value="double-elimination" className="text-white hover:bg-gaming-card">Double Elimination</SelectItem>
+                      <SelectItem value="round-robin" className="text-white hover:bg-gaming-card">Round Robin</SelectItem>
+                      <SelectItem value="swiss" className="text-white hover:bg-gaming-card">Swiss System</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-red-400" />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

@@ -131,6 +131,9 @@ export default function ProfileActivityFeed({ userId, isOwnProfile }: ProfileAct
   };
 
   const formatTimeAgo = (date: Date) => {
+    if (!date || !(date instanceof Date)) {
+      return 'Unknown';
+    }
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
@@ -143,7 +146,7 @@ export default function ProfileActivityFeed({ userId, isOwnProfile }: ProfileAct
     }
   };
 
-  const displayActivities = activities || mockActivities;
+  const displayActivities = Array.isArray(activities) ? activities : mockActivities;
 
   return (
     <Card className="bg-gaming-card border-gaming-card-hover">
@@ -166,7 +169,7 @@ export default function ProfileActivityFeed({ userId, isOwnProfile }: ProfileAct
               </div>
             ))}
           </div>
-        ) : displayActivities.length > 0 ? (
+        ) : Array.isArray(displayActivities) && displayActivities.length > 0 ? (
           <div className="space-y-3">
             {displayActivities.map((activity) => (
               <div 

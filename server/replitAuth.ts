@@ -9,6 +9,9 @@ import connectPg from "connect-pg-simple";
 import MemoryStore from "memorystore";
 import { storage } from "./storage";
 
+// Track logged out sessions in development
+const loggedOutSessions = new Set<string>();
+
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
@@ -127,9 +130,20 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
+    console.log('Logout request received');
+    
+    // Add session to logged out list
+    const sessionId = req.sessionID || req.session?.id;
+    if (sessionId) {
+      loggedOutSessions.add(sessionId);
+      console.log('Session', sessionId, 'marked as logged out');
+    }
+    
     // Set logout flag for development mode
     if (req.session) {
       (req.session as any).loggedOut = true;
+      (req.session as any).destroyed = true;
+      console.log('Session marked as logged out');
     }
     
     req.logout(() => {
@@ -139,9 +153,10 @@ export async function setupAuth(app: Express) {
           console.error('Session destruction error:', err);
         }
         res.clearCookie('connect.sid');
+        console.log('Session destroyed and cookie cleared');
         
         if (process.env.NODE_ENV === 'development') {
-          res.redirect('/');
+          res.json({ message: 'Logged out successfully' });
         } else {
           res.redirect(
             client.buildEndSessionUrl(config, {
@@ -158,10 +173,24 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   // In development mode, create a mock user for testing
   if (process.env.NODE_ENV === 'development' && !req.isAuthenticated()) {
-    // Check if user has explicitly logged out
-    if (req.session && (req.session as any).loggedOut) {
+    // Check if session exists
+    if (!req.session) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    const sessionId = req.sessionID || req.session.id;
+    
+    // Check if this session has been logged out
+    if (loggedOutSessions.has(sessionId)) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Check legacy session flags
+    if ((req.session as any).loggedOut || (req.session as any).destroyed) {
+      loggedOutSessions.add(sessionId);
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
     const mockUser = {
       claims: {
         sub: 'dev-user-123',

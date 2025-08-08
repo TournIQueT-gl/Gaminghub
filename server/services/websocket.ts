@@ -19,7 +19,7 @@ export class WebSocketService {
     this.wss = new WebSocketServer({ 
       server, 
       path: '/ws',
-      verifyClient: (info) => {
+      verifyClient: (info: any) => {
         // Allow all connections in development
         return true;
       }
