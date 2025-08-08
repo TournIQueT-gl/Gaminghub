@@ -7,7 +7,7 @@ import { tournamentService } from "./services/tournaments";
 import { clanService } from "./services/clans";
 import { notificationService } from "./services/notifications";
 import { createWebSocketService } from "./services/websocket";
-import { insertPostSchema, insertCommentSchema, insertClanSchema, insertClanApplicationSchema, insertClanEventSchema, insertTournamentSchema, insertTournamentParticipantSchema, insertTournamentMatchSchema, insertChatRoomSchema, insertChatMessageSchema, insertUserSocialSchema, insertFriendRequestSchema, insertUserPreferencesSchema, insertUserGameSchema, insertGameSessionSchema, insertGameAchievementSchema, insertGameReviewSchema, insertNotificationSchema, insertNotificationSettingsSchema, insertPushSubscriptionSchema, insertStreamSchema, insertStreamFollowSchema, insertStreamChatSchema, insertContentPieceSchema } from "@shared/schema";
+import { insertPostSchema, insertCommentSchema, insertClanSchema, insertTournamentSchema, insertChatRoomSchema, insertChatMessageSchema, insertNotificationSchema, insertNotificationSettingsSchema, insertPushSubscriptionSchema, insertStreamSchema, insertStreamFollowSchema, insertStreamChatSchema, insertContentPieceSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -26,19 +26,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User routes
-  app.get('/api/users/:id', async (req, res) => {
+  // User routes - Specific routes must come before general /:id route
+  app.get('/api/users/clan-membership', isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Ensure user exists in storage
+      let user = await storage.getUser(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email || `user${userId}@example.com`,
+          firstName: req.user.claims.given_name || "User",
+          lastName: req.user.claims.family_name || "",
+          profileImageUrl: req.user.claims.profile_image_url || null,
+          username: req.user.claims.preferred_username || `User${Math.floor(Math.random() * 1000)}`,
+        });
       }
-      res.json(user);
+      
+      const membership = await storage.getUserClanMembership(userId);
+      
+      // Return null for no membership instead of error
+      res.json(membership);
     } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      console.error("Error fetching clan membership:", error);
+      res.status(500).json({ message: "Failed to fetch clan membership" });
     }
   });
+
+  app.get('/api/users/games', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Ensure user exists in storage
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email || `user${userId}@example.com`,
+          firstName: req.user.claims.given_name || "User",
+          lastName: req.user.claims.family_name || "",
+          profileImageUrl: req.user.claims.profile_image_url || null,
+          username: req.user.claims.preferred_username || `User${Math.floor(Math.random() * 1000)}`,
+        });
+      }
+      
+      const games = await storage.getUserGameLibrary(userId);
+      res.json(games || []);
+    } catch (error) {
+      console.error("Error fetching game library:", error);
+      res.status(500).json({ message: "Failed to fetch game library" });
+    }
+  });
+
 
   app.get('/api/users/:id/posts', async (req, res) => {
     try {
@@ -63,13 +103,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         // Auto-create user if accessing their own stats
-        if (req.headers.authorization || req.user?.claims?.sub === userId) {
+        if (req.headers.authorization || (req as any).user?.claims?.sub === userId) {
           user = await storage.upsertUser({
             id: userId,
-            email: req.user?.claims?.email || `user${userId}@example.com`,
-            firstName: req.user?.claims?.first_name || "User",
-            lastName: req.user?.claims?.last_name || "",
-            profileImageUrl: req.user?.claims?.profile_image_url || null,
+            email: (req as any).user?.claims?.email || `user${userId}@example.com`,
+            firstName: (req as any).user?.claims?.given_name || "User",
+            lastName: (req as any).user?.claims?.family_name || "",
+            profileImageUrl: (req as any).user?.claims?.profile_image_url || null,
           });
         } else {
           // Auto-create user if they don't exist
@@ -103,22 +143,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user stats:", error);
       res.status(500).json({ message: "Failed to fetch user stats" });
-    }
-  });
-
-  app.get('/api/users/clan-membership', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      // User should already exist from isAuthenticated middleware
-      
-      const membership = await storage.getUserClanMembership(userId);
-      
-      // Return null for no membership instead of error
-      res.json(membership);
-    } catch (error) {
-      console.error("Error fetching clan membership:", error);
-      res.status(500).json({ message: "Failed to fetch clan membership" });
     }
   });
 
@@ -174,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      if (updateData.favoriteGames && updateData.favoriteGames.length > 10) {
+      if (updateData.favoriteGames && Array.isArray(updateData.favoriteGames) && updateData.favoriteGames.length > 10) {
         return res.status(400).json({ message: "You can only have up to 10 favorite games" });
       }
       
@@ -1132,20 +1156,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User game routes
-  app.get('/api/users/games', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      // User should already exist from isAuthenticated middleware
-      
-      const games = await storage.getUserGameLibrary(userId);
-      res.json(games);
-    } catch (error) {
-      console.error("Error fetching game library:", error);
-      res.status(500).json({ message: "Failed to fetch game library" });
-    }
-  });
 
   app.post('/api/users/games', isAuthenticated, async (req: any, res) => {
     try {

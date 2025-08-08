@@ -153,15 +153,19 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     
     // Create mock user in storage if it doesn't exist
     try {
-      await storage.upsertUser({
-        id: mockUser.claims.sub,
-        email: mockUser.claims.email,
-        username: mockUser.claims.preferred_username,
-        firstName: mockUser.claims.given_name,
-        lastName: mockUser.claims.family_name,
-      });
+      const existingUser = await storage.getUser(mockUser.claims.sub);
+      if (!existingUser) {
+        await storage.upsertUser({
+          id: mockUser.claims.sub,
+          email: mockUser.claims.email,
+          username: mockUser.claims.preferred_username,
+          firstName: mockUser.claims.given_name,
+          lastName: mockUser.claims.family_name,
+        });
+        console.log('Mock user created successfully');
+      }
     } catch (error) {
-      console.log('Mock user setup complete');
+      console.error('Error creating mock user:', error);
     }
     
     (req as any).user = mockUser;
