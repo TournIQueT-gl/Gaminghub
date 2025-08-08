@@ -79,6 +79,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/users/game-sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Ensure user exists in storage
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email || `user${userId}@example.com`,
+          firstName: req.user.claims.given_name || "User",
+          lastName: req.user.claims.family_name || "",
+          profileImageUrl: req.user.claims.profile_image_url || null,
+          username: req.user.claims.preferred_username || `User${Math.floor(Math.random() * 1000)}`,
+        });
+      }
+      
+      const sessions = await storage.getUserGameSessions(userId);
+      res.json(sessions || []);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch game sessions" });
+    }
+  });
+
+  app.get('/api/users/game-achievements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Ensure user exists in storage
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email || `user${userId}@example.com`,
+          firstName: req.user.claims.given_name || "User",
+          lastName: req.user.claims.family_name || "",
+          profileImageUrl: req.user.claims.profile_image_url || null,
+          username: req.user.claims.preferred_username || `User${Math.floor(Math.random() * 1000)}`,
+        });
+      }
+      
+      const achievements = await storage.getUserGameAchievements(userId);
+      res.json(achievements || []);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  app.get('/api/users/game-statistics', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Ensure user exists in storage
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email || `user${userId}@example.com`,
+          firstName: req.user.claims.given_name || "User",
+          lastName: req.user.claims.family_name || "",
+          profileImageUrl: req.user.claims.profile_image_url || null,
+          username: req.user.claims.preferred_username || `User${Math.floor(Math.random() * 1000)}`,
+        });
+      }
+      
+      const statistics = await storage.getUserGameStatistics(userId);
+      res.json(statistics || []);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch game statistics" });
+    }
+  });
+
+  app.get('/api/users/preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Ensure user exists in storage
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email || `user${userId}@example.com`,
+          firstName: req.user.claims.given_name || "User",
+          lastName: req.user.claims.family_name || "",
+          profileImageUrl: req.user.claims.profile_image_url || null,
+          username: req.user.claims.preferred_username || `User${Math.floor(Math.random() * 1000)}`,
+        });
+      }
+      
+      const preferences = await storage.getUserPreferences(userId);
+      res.json(preferences || {});
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch preferences" });
+    }
+  });
+
+  app.get('/api/users/socials', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Ensure user exists in storage
+      let user = await storage.getUser(userId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.claims.email || `user${userId}@example.com`,
+          firstName: req.user.claims.given_name || "User",
+          lastName: req.user.claims.family_name || "",
+          profileImageUrl: req.user.claims.profile_image_url || null,
+          username: req.user.claims.preferred_username || `User${Math.floor(Math.random() * 1000)}`,
+        });
+      }
+      
+      const socials = await storage.getUserSocials(userId);
+      res.json(socials || []);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch socials" });
+    }
+  });
+
 
   app.get('/api/users/:id/posts', async (req, res) => {
     try {
@@ -1168,25 +1288,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/users/game-sessions', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const sessions = await storage.getUserGameSessions(userId);
-      res.json(sessions);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch game sessions" });
-    }
-  });
-
-  app.get('/api/users/game-achievements', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const achievements = await storage.getUserGameAchievements(userId);
-      res.json(achievements);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch achievements" });
-    }
-  });
 
   // Discover routes
   app.get('/api/discover/users', async (req, res) => {

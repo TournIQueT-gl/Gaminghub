@@ -951,6 +951,36 @@ export class MemoryStorage implements IStorage {
     }
   }
 
+  async getUserGameStatistics(userId: string): Promise<any[]> {
+    const userStats = Array.from(this.gameStatistics.values())
+      .filter(stat => stat.userId === userId);
+    return userStats;
+  }
+
+  async getUserPreferences(userId: string): Promise<any> {
+    const prefs = this.userPreferences.get(userId);
+    return prefs || {
+      notifications: {
+        email: true,
+        push: true,
+        inApp: true
+      },
+      privacy: {
+        showProfile: true,
+        showActivity: true
+      },
+      gameplay: {
+        autoJoinVoice: false,
+        showPerformanceStats: true
+      }
+    };
+  }
+
+  async getUserSocials(userId: string): Promise<any[]> {
+    const socials = this.userSocials.get(userId);
+    return socials ? [socials] : [];
+  }
+
   async getGameStatistics(userId: string, gameId: string): Promise<GameStatistics | undefined> {
     const key = `${userId}-${gameId}`;
     return this.gameStatistics.get(key);
