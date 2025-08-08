@@ -2,8 +2,13 @@ import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "" 
 });
+
+const hasValidApiKey = () => {
+  const key = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR;
+  return key && key !== "" && key !== "default_key";
+};
 
 export interface HashtagsResponse {
   hashtags: string[];
@@ -21,6 +26,11 @@ export interface BioResponse {
 
 export class AIService {
   async generateHashtags(content: string): Promise<HashtagsResponse> {
+    if (!hasValidApiKey()) {
+      console.log('OpenAI API key not configured, returning default hashtags');
+      return { hashtags: ['gaming', 'community', 'fun'] };
+    }
+    
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -48,6 +58,11 @@ export class AIService {
   }
 
   async moderateContent(content: string): Promise<ModerationResponse> {
+    if (!hasValidApiKey()) {
+      console.log('OpenAI API key not configured, skipping moderation');
+      return { isToxic: false, score: 0, categories: [] };
+    }
+    
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -77,6 +92,11 @@ export class AIService {
   }
 
   async generateGamerBio(gamePreferences: string[]): Promise<BioResponse> {
+    if (!hasValidApiKey()) {
+      console.log('OpenAI API key not configured, returning default bio');
+      return { bio: "Passionate gamer exploring virtual worlds." };
+    }
+    
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
