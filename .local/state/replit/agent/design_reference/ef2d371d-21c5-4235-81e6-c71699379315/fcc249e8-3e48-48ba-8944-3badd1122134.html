@@ -1,0 +1,693 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GamingX - Professional Gaming Social Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'gaming-dark': '#0F0F23',
+                        'gaming-darker': '#08081C',
+                        'gaming-card': '#1A1B3A', 
+                        'gaming-card-hover': '#252649',
+                        'gaming-blue': '#00D4FF',
+                        'gaming-purple': '#8B5CF6',
+                        'gaming-emerald': '#10B981',
+                        'gaming-red': '#EF4444',
+                        'gaming-text': '#E5E7EB',
+                        'gaming-text-dim': '#9CA3AF'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace']
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'pulse-slow': 'pulse 3s ease-in-out infinite',
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        @keyframes glow {
+            from { box-shadow: 0 0 20px #00D4FF40; }
+            to { box-shadow: 0 0 30px #00D4FF60, 0 0 40px #00D4FF40; }
+        }
+        
+        .tournament-bracket-line {
+            background: linear-gradient(90deg, transparent 0%, #8B5CF6 50%, transparent 100%);
+        }
+        
+        .clan-badge {
+            background: linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%);
+        }
+        
+        .gaming-gradient {
+            background: linear-gradient(135deg, #00D4FF 0%, #8B5CF6 100%);
+        }
+        
+        .scrollbar-hidden {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .scrollbar-hidden::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gaming-dark text-gaming-text font-inter overflow-x-hidden">
+    <!-- @COMPONENT: App Layout with Sidebar Navigation -->
+    <div class="flex min-h-screen">
+        <!-- @COMPONENT: Sidebar Navigation -->
+        <div class="w-64 bg-gaming-darker border-r border-gaming-card flex flex-col fixed h-full z-10">
+            <!-- @COMPONENT: Logo/Brand -->
+            <div class="p-6 border-b border-gaming-card">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-gaming-blue to-gaming-purple rounded-lg flex items-center justify-center">
+                        <i class="fas fa-gamepad text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">GamingX</h1>
+                        <p class="text-xs text-gaming-text-dim">Pro Gaming Social</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- @COMPONENT: User Profile Section -->
+            <div class="p-4 border-b border-gaming-card">
+                <div class="flex items-center space-x-3" data-mock="true">
+                    <!-- Professional gaming profile photo -->
+                    <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" alt="User avatar" class="w-12 h-12 rounded-lg object-cover border-2 border-gaming-blue" data-bind="user.avatar">
+                    <div>
+                        <h3 class="font-semibold text-white" data-bind="user.username">ProGamer_2024</h3>
+                        <div class="flex items-center space-x-1">
+                            <div class="w-2 h-2 bg-gaming-emerald rounded-full"></div>
+                            <span class="text-xs text-gaming-text-dim">Online</span>
+                        </div>
+                        <div class="flex items-center space-x-1 mt-1">
+                            <span class="text-xs text-gaming-text-dim">Level</span>
+                            <span class="text-xs font-mono text-gaming-blue" data-bind="user.level">47</span>
+                            <div class="flex-1 bg-gaming-card rounded-full h-1 ml-2">
+                                <div class="bg-gaming-blue h-1 rounded-full w-3/4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- @COMPONENT: Navigation Menu -->
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-gaming-blue text-white font-medium">
+                    <i class="fas fa-home text-lg"></i>
+                    <span>Feed</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gaming-card text-gaming-text-dim hover:text-white transition-all">
+                    <i class="fas fa-trophy text-lg"></i>
+                    <span>Tournaments</span>
+                    <span class="ml-auto bg-gaming-red text-white text-xs px-2 py-1 rounded-full">3</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gaming-card text-gaming-text-dim hover:text-white transition-all">
+                    <i class="fas fa-users text-lg"></i>
+                    <span>Clans</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gaming-card text-gaming-text-dim hover:text-white transition-all">
+                    <i class="fas fa-comments text-lg"></i>
+                    <span>Messages</span>
+                    <span class="ml-auto bg-gaming-purple text-white text-xs px-2 py-1 rounded-full">12</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gaming-card text-gaming-text-dim hover:text-white transition-all">
+                    <i class="fas fa-user text-lg"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gaming-card text-gaming-text-dim hover:text-white transition-all">
+                    <i class="fas fa-cog text-lg"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <!-- @COMPONENT: Clan Quick Access -->
+            <div class="p-4 border-t border-gaming-card">
+                <h4 class="text-sm font-semibold text-gaming-text-dim mb-3">MY CLAN</h4>
+                <div class="bg-gaming-card rounded-lg p-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 clan-badge rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-white text-sm" data-bind="user.clan.name">Elite Esports</h5>
+                            <p class="text-xs text-gaming-text-dim" data-bind="user.clan.role">Co-Leader</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Sidebar Navigation -->
+
+        <!-- @COMPONENT: Main Content Area -->
+        <div class="flex-1 ml-64">
+            <!-- @COMPONENT: Top Header -->
+            <header class="bg-gaming-darker border-b border-gaming-card p-4 sticky top-0 z-20">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-2xl font-bold text-white">Gaming Feed</h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gaming-text-dim">Live users:</span>
+                            <span class="text-sm font-mono text-gaming-emerald">1,247</span>
+                            <div class="w-2 h-2 bg-gaming-emerald rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- @COMPONENT: Search Bar -->
+                        <div class="relative">
+                            <input type="text" placeholder="Search posts, users, tournaments..." 
+                                   class="bg-gaming-card border border-gaming-card-hover rounded-lg px-4 py-2 pl-10 w-80 text-sm focus:outline-none focus:border-gaming-blue transition-colors"
+                                   data-implementation="Should implement real-time search with debouncing">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gaming-text-dim"></i>
+                        </div>
+
+                        <!-- @COMPONENT: Notifications -->
+                        <button class="relative p-2 rounded-lg hover:bg-gaming-card transition-colors" data-event="click:toggleNotifications">
+                            <i class="fas fa-bell text-lg"></i>
+                            <span class="absolute -top-1 -right-1 bg-gaming-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">7</span>
+                        </button>
+
+                        <!-- @COMPONENT: User Menu -->
+                        <button class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gaming-card transition-colors" data-event="click:toggleUserMenu">
+                            <!-- User profile image -->
+                            <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40" alt="User menu" class="w-8 h-8 rounded-lg object-cover">
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: Top Header -->
+
+            <!-- @COMPONENT: Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+                <!-- @COMPONENT: Left Column - Main Feed -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- @COMPONENT: Create Post -->
+                    <div class="bg-gaming-card rounded-xl p-6 border border-gaming-card-hover">
+                        <div class="flex items-start space-x-4">
+                            <!-- User avatar for post creation -->
+                            <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&h=50" alt="Your avatar" class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <textarea placeholder="Share your gaming moment, achievement, or thoughts with the community..." 
+                                         class="w-full bg-gaming-darker border border-gaming-card-hover rounded-lg p-4 resize-none focus:outline-none focus:border-gaming-blue transition-colors"
+                                         rows="3" data-implementation="Should auto-expand and include AI hashtag suggestions"></textarea>
+                                
+                                <div class="flex items-center justify-between mt-4">
+                                    <div class="flex items-center space-x-4">
+                                        <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-blue transition-colors" data-event="click:attachMedia">
+                                            <i class="fas fa-image"></i>
+                                            <span class="text-sm">Photo/Video</span>
+                                        </button>
+                                        <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-purple transition-colors" data-event="click:attachGame">
+                                            <i class="fas fa-gamepad"></i>
+                                            <span class="text-sm">Game</span>
+                                        </button>
+                                        <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-emerald transition-colors" data-event="click:generateHashtags">
+                                            <i class="fas fa-magic"></i>
+                                            <span class="text-sm">AI Hashtags</span>
+                                        </button>
+                                    </div>
+                                    <button class="bg-gaming-blue hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors" data-event="click:createPost">
+                                        Post
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Create Post -->
+
+                    <!-- @COMPONENT: Feed Posts -->
+                    <!-- @MAP: posts.map(post => ( -->
+                    <article class="bg-gaming-card rounded-xl border border-gaming-card-hover hover:border-gaming-blue/30 transition-colors" data-mock="true">
+                        <div class="p-6">
+                            <!-- @COMPONENT: Post Header -->
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <!-- Gaming streamer profile photo -->
+                                    <img src="https://pixabay.com/get/g57b91b707eadf6ce0bee443df3da489a97b279acab58970c03cb0db074ee7fee97518936a47202f6484a67d4ddfee1465533224a9a6d9018e8bd15b1ba76698f_1280.jpg" alt="User avatar" class="w-12 h-12 rounded-lg object-cover" data-bind="post.user.avatar">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <h4 class="font-semibold text-white" data-bind="post.user.username">GamerPro_Alex</h4>
+                                            <span class="bg-gaming-purple text-white text-xs px-2 py-1 rounded-full" data-bind="post.user.badge">Verified</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2 text-sm text-gaming-text-dim">
+                                            <span data-bind="post.timestamp">2 hours ago</span>
+                                            <span>•</span>
+                                            <span class="flex items-center space-x-1">
+                                                <i class="fas fa-gamepad text-xs"></i>
+                                                <span data-bind="post.game">Call of Duty: Warzone</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="text-gaming-text-dim hover:text-white p-2 rounded-lg hover:bg-gaming-card-hover transition-colors" data-event="click:togglePostMenu">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+
+                            <!-- @COMPONENT: Post Content -->
+                            <div class="mb-4">
+                                <p class="text-gaming-text mb-3" data-bind="post.content">
+                                    Just hit a 25 kill streak in Warzone! 🔥 That final circle was intense. The new meta loadout is absolutely crushing it. 
+                                </p>
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <span class="text-gaming-blue text-sm">#Warzone</span>
+                                    <span class="text-gaming-blue text-sm">#Gaming</span>
+                                    <span class="text-gaming-blue text-sm">#CallOfDuty</span>
+                                    <span class="text-gaming-blue text-sm">#Victory</span>
+                                </div>
+                                
+                                <!-- Gaming victory screenshot -->
+                                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" alt="Gaming screenshot" class="w-full rounded-xl object-cover" data-bind="post.media">
+                            </div>
+
+                            <!-- @COMPONENT: Post Actions -->
+                            <div class="flex items-center justify-between pt-4 border-t border-gaming-card-hover">
+                                <div class="flex items-center space-x-6">
+                                    <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-red transition-colors" data-event="click:toggleLike">
+                                        <i class="fas fa-heart"></i>
+                                        <span class="font-mono text-sm" data-bind="post.likes">247</span>
+                                    </button>
+                                    <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-blue transition-colors" data-event="click:toggleComments">
+                                        <i class="fas fa-comment"></i>
+                                        <span class="font-mono text-sm" data-bind="post.comments">34</span>
+                                    </button>
+                                    <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-emerald transition-colors" data-event="click:sharePost">
+                                        <i class="fas fa-share"></i>
+                                        <span class="font-mono text-sm" data-bind="post.shares">12</span>
+                                    </button>
+                                </div>
+                                <button class="text-gaming-text-dim hover:text-gaming-purple transition-colors" data-event="click:savePost">
+                                    <i class="fas fa-bookmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- @COMPONENT: Comments Section -->
+                        <div class="border-t border-gaming-card-hover p-6 bg-gaming-darker/30">
+                            <div class="space-y-4">
+                                <!-- @MAP: post.comments.slice(0, 3).map(comment => ( -->
+                                <div class="flex items-start space-x-3" data-mock="true">
+                                    <!-- Gaming community member photo -->
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40" alt="Commenter avatar" class="w-8 h-8 rounded-lg object-cover" data-bind="comment.user.avatar">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="font-medium text-white text-sm" data-bind="comment.user.username">ProSniper_99</span>
+                                            <span class="text-xs text-gaming-text-dim" data-bind="comment.timestamp">1h</span>
+                                        </div>
+                                        <p class="text-gaming-text text-sm" data-bind="comment.content">That's insane! What loadout were you running? I can barely get past 10 kills 😅</p>
+                                        <div class="flex items-center space-x-4 mt-2">
+                                            <button class="text-gaming-text-dim hover:text-gaming-red text-xs transition-colors" data-event="click:likeComment">
+                                                <i class="fas fa-heart mr-1"></i>
+                                                <span data-bind="comment.likes">5</span>
+                                            </button>
+                                            <button class="text-gaming-text-dim hover:text-gaming-blue text-xs transition-colors" data-event="click:replyToComment">
+                                                Reply
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gaming-card-hover">
+                                <div class="flex items-start space-x-3">
+                                    <!-- Current user avatar for commenting -->
+                                    <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40" alt="Your avatar" class="w-8 h-8 rounded-lg object-cover">
+                                    <div class="flex-1">
+                                        <input type="text" placeholder="Add a comment..." 
+                                               class="w-full bg-gaming-card border border-gaming-card-hover rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gaming-blue transition-colors"
+                                               data-implementation="Should support mentions and emoji picker">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    <!-- @END_MAP )) -->
+
+                    <!-- Additional post examples -->
+                    <article class="bg-gaming-card rounded-xl border border-gaming-card-hover hover:border-gaming-blue/30 transition-colors" data-mock="true">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <!-- Female gamer profile photo -->
+                                    <img src="https://pixabay.com/get/g93bde38e9af33cb25caef70803f3c2f83f2c1144f950d8a849a3a341fa3bf3fdd3b2e0542b6bf31af68cec02c0bb63b2f55b76a697c84f65415f1efd4881fa27_1280.jpg" alt="User avatar" class="w-12 h-12 rounded-lg object-cover">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <h4 class="font-semibold text-white">StreamQueen_Luna</h4>
+                                            <span class="bg-gaming-emerald text-white text-xs px-2 py-1 rounded-full">Streamer</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2 text-sm text-gaming-text-dim">
+                                            <span>4 hours ago</span>
+                                            <span>•</span>
+                                            <span class="flex items-center space-x-1">
+                                                <i class="fas fa-gamepad text-xs"></i>
+                                                <span>Valorant</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="text-gaming-text-dim hover:text-white p-2 rounded-lg hover:bg-gaming-card-hover transition-colors">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+
+                            <div class="mb-4">
+                                <p class="text-gaming-text mb-3">
+                                    Live streaming Valorant ranked! Come watch me climb to Radiant 🚀 Currently Diamond 3 and feeling confident about today's matches.
+                                </p>
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <span class="text-gaming-blue text-sm">#Valorant</span>
+                                    <span class="text-gaming-blue text-sm">#LiveStream</span>
+                                    <span class="text-gaming-blue text-sm">#Ranked</span>
+                                    <span class="text-gaming-blue text-sm">#Radiant</span>
+                                </div>
+                                
+                                <!-- Valorant gameplay screenshot -->
+                                <img src="https://images.unsplash.com/photo-1560253023-3ec5d502959f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" alt="Valorant gameplay" class="w-full rounded-xl object-cover">
+                                
+                                <div class="mt-4 bg-gaming-darker rounded-lg p-4 border border-gaming-purple/30">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 bg-gaming-red rounded-full animate-pulse"></div>
+                                        <span class="text-sm font-medium text-white">LIVE NOW</span>
+                                        <span class="text-sm text-gaming-text-dim">•</span>
+                                        <span class="text-sm text-gaming-text-dim">1,247 viewers</span>
+                                        <button class="ml-auto bg-gaming-purple hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                            Watch Stream
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-gaming-card-hover">
+                                <div class="flex items-center space-x-6">
+                                    <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-red transition-colors">
+                                        <i class="fas fa-heart"></i>
+                                        <span class="font-mono text-sm">189</span>
+                                    </button>
+                                    <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-blue transition-colors">
+                                        <i class="fas fa-comment"></i>
+                                        <span class="font-mono text-sm">67</span>
+                                    </button>
+                                    <button class="flex items-center space-x-2 text-gaming-text-dim hover:text-gaming-emerald transition-colors">
+                                        <i class="fas fa-share"></i>
+                                        <span class="font-mono text-sm">23</span>
+                                    </button>
+                                </div>
+                                <button class="text-gaming-text-dim hover:text-gaming-purple transition-colors">
+                                    <i class="fas fa-bookmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <!-- @END_COMPONENT: Left Column - Main Feed -->
+
+                <!-- @COMPONENT: Right Column - Sidebar Widgets -->
+                <div class="space-y-6">
+                    <!-- @COMPONENT: Active Tournaments Widget -->
+                    <div class="bg-gaming-card rounded-xl p-6 border border-gaming-card-hover">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-white">Active Tournaments</h3>
+                            <button class="text-gaming-blue hover:text-blue-400 text-sm font-medium">View All</button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <!-- @MAP: activeTournaments.map(tournament => ( -->
+                            <div class="bg-gaming-darker rounded-lg p-4 border border-gaming-card-hover hover:border-gaming-purple/50 transition-colors cursor-pointer" data-mock="true">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div>
+                                        <h4 class="font-semibold text-white text-sm" data-bind="tournament.name">Valorant Champions Cup</h4>
+                                        <p class="text-xs text-gaming-text-dim" data-bind="tournament.game">Valorant • 5v5</p>
+                                    </div>
+                                    <span class="bg-gaming-emerald text-white text-xs px-2 py-1 rounded-full" data-bind="tournament.status">Live</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-gaming-text-dim">
+                                    <span>Prize Pool: <span class="text-gaming-blue font-mono" data-bind="tournament.prizePool">$5,000</span></span>
+                                    <span data-bind="tournament.participants">64/64 teams</span>
+                                </div>
+                                <div class="mt-3 bg-gaming-card rounded h-1">
+                                    <div class="bg-gaming-purple h-1 rounded w-3/4"></div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+
+                            <div class="bg-gaming-darker rounded-lg p-4 border border-gaming-card-hover hover:border-gaming-blue/50 transition-colors cursor-pointer" data-mock="true">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div>
+                                        <h4 class="font-semibold text-white text-sm">CS2 Pro League</h4>
+                                        <p class="text-xs text-gaming-text-dim">Counter-Strike 2 • 5v5</p>
+                                    </div>
+                                    <span class="bg-gaming-blue text-white text-xs px-2 py-1 rounded-full">Registering</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-gaming-text-dim">
+                                    <span>Prize Pool: <span class="text-gaming-blue font-mono">$2,500</span></span>
+                                    <span>24/32 teams</span>
+                                </div>
+                                <div class="mt-3 bg-gaming-card rounded h-1">
+                                    <div class="bg-gaming-blue h-1 rounded w-3/4"></div>
+                                </div>
+                            </div>
+
+                            <button class="w-full bg-gaming-purple hover:bg-purple-600 text-white py-3 rounded-lg font-medium transition-colors" data-event="click:createTournament">
+                                <i class="fas fa-plus mr-2"></i>
+                                Create Tournament
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Active Tournaments Widget -->
+
+                    <!-- @COMPONENT: Trending Clans Widget -->
+                    <div class="bg-gaming-card rounded-xl p-6 border border-gaming-card-hover">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-white">Trending Clans</h3>
+                            <button class="text-gaming-blue hover:text-blue-400 text-sm font-medium">Explore</button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <!-- @MAP: trendingClans.map(clan => ( -->
+                            <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gaming-card-hover transition-colors cursor-pointer" data-mock="true">
+                                <div class="w-10 h-10 clan-badge rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                    <span data-bind="clan.initial">TE</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-sm" data-bind="clan.name">Team Elite</h4>
+                                    <p class="text-xs text-gaming-text-dim" data-bind="clan.members">247 members</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gaming-emerald font-mono" data-bind="clan.xp">+1,247 XP</div>
+                                    <div class="text-xs text-gaming-text-dim">this week</div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+
+                            <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gaming-card-hover transition-colors cursor-pointer" data-mock="true">
+                                <div class="w-10 h-10 clan-badge rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                    <span>VP</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-sm">Viper Squad</h4>
+                                    <p class="text-xs text-gaming-text-dim">189 members</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gaming-emerald font-mono">+892 XP</div>
+                                    <div class="text-xs text-gaming-text-dim">this week</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gaming-card-hover transition-colors cursor-pointer" data-mock="true">
+                                <div class="w-10 h-10 clan-badge rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                    <span>NX</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-sm">Nexus Gaming</h4>
+                                    <p class="text-xs text-gaming-text-dim">356 members</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gaming-emerald font-mono">+743 XP</div>
+                                    <div class="text-xs text-gaming-text-dim">this week</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Trending Clans Widget -->
+
+                    <!-- @COMPONENT: Live Chat Widget -->
+                    <div class="bg-gaming-card rounded-xl border border-gaming-card-hover">
+                        <div class="p-4 border-b border-gaming-card-hover">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-white">Global Chat</h3>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-gaming-emerald rounded-full animate-pulse"></div>
+                                    <span class="text-xs text-gaming-text-dim">127 online</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- @COMPONENT: Chat Messages -->
+                        <div class="h-64 overflow-y-auto scrollbar-hidden p-4 space-y-3">
+                            <!-- @MAP: chatMessages.map(message => ( -->
+                            <div class="flex items-start space-x-2" data-mock="true">
+                                <!-- Chat participant profile photo -->
+                                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=30&h=30" alt="Chat user" class="w-6 h-6 rounded object-cover flex-shrink-0" data-bind="message.user.avatar">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-medium text-white text-xs" data-bind="message.user.username">GameMaster_42</span>
+                                        <span class="text-xs text-gaming-text-dim" data-bind="message.timestamp">2m</span>
+                                    </div>
+                                    <p class="text-gaming-text text-xs mt-1 break-words" data-bind="message.content">Anyone up for a quick Valorant match? Need 2 more players!</p>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+
+                            <div class="flex items-start space-x-2" data-mock="true">
+                                <!-- Gaming enthusiast photo -->
+                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=30&h=30" alt="Chat user" class="w-6 h-6 rounded object-cover flex-shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-medium text-white text-xs">SnipeKing_99</span>
+                                        <span class="text-xs text-gaming-text-dim">1m</span>
+                                    </div>
+                                    <p class="text-gaming-text text-xs mt-1 break-words">I'm in! What rank?</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-2" data-mock="true">
+                                <!-- Gaming community member photo -->
+                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=30&h=30" alt="Chat user" class="w-6 h-6 rounded object-cover flex-shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-medium text-white text-xs">LunaGaming</span>
+                                        <span class="text-xs text-gaming-text-dim">30s</span>
+                                    </div>
+                                    <p class="text-gaming-text text-xs mt-1 break-words">Diamond/Immortal preferred! 🔥</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-2" data-mock="true">
+                                <!-- Esports player photo -->
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=30&h=30" alt="Chat user" class="w-6 h-6 rounded object-cover flex-shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-medium text-white text-xs">ProPlayer_X</span>
+                                        <span class="text-xs text-gaming-text-dim">now</span>
+                                        <div class="w-1 h-1 bg-gaming-blue rounded-full animate-pulse"></div>
+                                    </div>
+                                    <p class="text-gaming-text text-xs mt-1 break-words">Perfect timing! Let's go</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- @COMPONENT: Chat Input -->
+                        <div class="p-4 border-t border-gaming-card-hover">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="Type a message..." 
+                                       class="flex-1 bg-gaming-darker border border-gaming-card-hover rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gaming-blue transition-colors"
+                                       data-implementation="Should support emoji picker and mentions">
+                                <button class="bg-gaming-blue hover:bg-blue-600 text-white p-2 rounded-lg transition-colors" data-event="click:sendMessage">
+                                    <i class="fas fa-paper-plane text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Live Chat Widget -->
+
+                    <!-- @COMPONENT: Quick Stats Widget -->
+                    <div class="bg-gaming-card rounded-xl p-6 border border-gaming-card-hover">
+                        <h3 class="font-bold text-white mb-4">Your Stats</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gaming-text-dim">Posts this week</span>
+                                <span class="font-mono text-gaming-blue font-semibold" data-bind="user.stats.posts">12</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gaming-text-dim">Total followers</span>
+                                <span class="font-mono text-gaming-purple font-semibold" data-bind="user.stats.followers">1,247</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gaming-text-dim">Tournament wins</span>
+                                <span class="font-mono text-gaming-emerald font-semibold" data-bind="user.stats.tournamentWins">7</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gaming-text-dim">Clan XP</span>
+                                <span class="font-mono text-gaming-blue font-semibold" data-bind="user.stats.clanXp">2,847</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gaming-card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-gaming-text-dim">Level Progress</span>
+                                <span class="text-sm font-mono text-gaming-blue">47 → 48</span>
+                            </div>
+                            <div class="bg-gaming-darker rounded-full h-2">
+                                <div class="bg-gradient-to-r from-gaming-blue to-gaming-purple h-2 rounded-full w-3/4 animate-glow"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gaming-text-dim mt-1">
+                                <span>2,847 XP</span>
+                                <span>4,000 XP</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Quick Stats Widget -->
+                </div>
+                <!-- @END_COMPONENT: Right Column - Sidebar Widgets -->
+            </div>
+            <!-- @END_COMPONENT: Main Content Grid -->
+        </div>
+        <!-- @END_COMPONENT: Main Content Area -->
+    </div>
+    <!-- @END_COMPONENT: App Layout -->
+
+    <!-- @COMPONENT: Floating Action Buttons -->
+    <div class="fixed bottom-6 right-6 flex flex-col space-y-3 z-30">
+        <button class="w-14 h-14 bg-gaming-purple hover:bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center" data-event="click:quickChat">
+            <i class="fas fa-comments text-lg"></i>
+        </button>
+        <button class="w-14 h-14 bg-gaming-blue hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center animate-glow" data-event="click:quickPost">
+            <i class="fas fa-plus text-lg"></i>
+        </button>
+    </div>
+    <!-- @END_COMPONENT: Floating Action Buttons -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            // Simple demo interactions - would be replaced with React components
+            console.log('GamingX Platform Initialized');
+            
+            // Simulate real-time notifications
+            setInterval(() => {
+                // TODO: Replace with real WebSocket connection
+                console.log('Checking for new notifications...');
+            }, 5000);
+            
+            // Simulate typing indicators in chat
+            const chatInputs = document.querySelectorAll('input[placeholder*="message"]');
+            chatInputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    // TODO: Emit typing indicator to other users
+                    console.log('User started typing in chat');
+                });
+                
+                input.addEventListener('blur', () => {
+                    // TODO: Stop typing indicator
+                    console.log('User stopped typing in chat');
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
