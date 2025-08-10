@@ -167,18 +167,6 @@ export class UsersService {
     return updatedUser;
   }
 
-    // Log XP gain
-    this.logger.log(`User ${userId} gained ${xp} XP. Reason: ${reason || 'Unknown'}`);
-
-    // Check for level up
-    if (newLevel > user.level) {
-      this.logger.log(`User ${userId} leveled up to level ${newLevel}!`);
-      // TODO: Create level up notification
-    }
-
-    return updatedUser;
-  }
-
   async followUser(followerId: string, followingId: string) {
     if (followerId === followingId) {
       throw new BadRequestException('Cannot follow yourself');

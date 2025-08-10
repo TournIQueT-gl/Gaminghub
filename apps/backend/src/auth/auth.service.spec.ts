@@ -86,7 +86,8 @@ describe('AuthService', () => {
         email: 'test@example.com',
         username: 'testuser',
       });
-      expect(result.password).toBeUndefined();
+      // Ensure password field is not included in the returned result
+      expect(result).not.toHaveProperty('password');
     });
 
     it('should return null when credentials are invalid', async () => {
