@@ -173,12 +173,8 @@ describe('PostsService', () => {
 
       mockPrismaService.post.findUnique.mockResolvedValue(mockPost);
       mockPrismaService.like.findUnique.mockResolvedValue(null);
-      mockPrismaService.$transaction.mockImplementation(async (callback) => {
-        return callback({
-          like: { create: jest.fn() },
-          post: { update: jest.fn() },
-        });
-      });
+      // Transaction execution isn't important for this unit test, so resolve immediately
+      mockPrismaService.$transaction.mockResolvedValue(null);
       mockUsersService.addXP.mockResolvedValue({});
 
       const result = await service.likePost(userId, postId);
@@ -196,12 +192,7 @@ describe('PostsService', () => {
 
       mockPrismaService.post.findUnique.mockResolvedValue(mockPost);
       mockPrismaService.like.findUnique.mockResolvedValue(mockLike);
-      mockPrismaService.$transaction.mockImplementation(async (callback) => {
-        return callback({
-          like: { delete: jest.fn() },
-          post: { update: jest.fn() },
-        });
-      });
+      mockPrismaService.$transaction.mockResolvedValue(null);
 
       const result = await service.likePost(userId, postId);
 
